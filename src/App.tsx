@@ -124,8 +124,16 @@ export default function App() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col font-sans">
-      {/* Soft Header */}
+    <AnimatePresence mode="popLayout">
+      <motion.div 
+        key={theme}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+        className={`min-h-screen flex flex-col font-sans theme-${theme}`}
+      >
+        {/* Soft Header */}
       <header className="px-8 py-10 md:px-16 md:py-16 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
         <div>
           <div className="flex items-center gap-3 mb-4">
@@ -163,7 +171,7 @@ export default function App() {
               setNewBook({ title: '', author: '', genre: '' });
               setShowAddBook(true);
             }}
-            className="px-8 py-4 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 rounded-full hover:shadow-2xl transition-all flex items-center gap-3 group"
+            className="px-8 py-4 bg-accent-sanc text-bg-sanc rounded-full hover:shadow-2xl transition-all flex items-center gap-3 group"
           >
             <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
             <span className="font-medium">Ritual Baru</span>
@@ -242,68 +250,90 @@ export default function App() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[200] flex items-center justify-center p-6 md:p-12"
           >
-            <div 
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               onClick={() => setJournalBook(null)}
-              className="absolute inset-0 bg-stone-950/40 backdrop-blur-md" 
+              className="absolute inset-0 bg-stone-950/60 backdrop-blur-md" 
             />
             <motion.div 
-              initial={{ scale: 0.95, y: 30 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 30 }}
-              className="w-full max-w-4xl h-full max-h-[85vh] bg-stone-50 dark:bg-stone-900 rounded-[3rem] shadow-3xl relative z-10 overflow-hidden flex flex-col border border-white/10"
+              initial={{ scale: 0.95, y: 40, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.95, y: 40, opacity: 0 }}
+              transition={{ type: "spring", damping: 30, stiffness: 150 }}
+              className="w-full max-w-4xl h-full max-h-[85vh] bg-bg-sanc rounded-[3rem] shadow-3xl relative z-10 overflow-hidden flex flex-col border border-border-sanc"
             >
-              <div className="p-8 md:p-12 border-b border-current/5 flex justify-between items-center bg-stone-100/30 dark:bg-black/20">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-current/5 rounded-2xl">
-                    <Quote className="w-6 h-6 opacity-40" />
-                  </div>
+              <div className="p-8 md:p-14 border-b border-current/5 flex justify-between items-center bg-current/[0.02]">
+                <div className="flex items-center gap-6">
+                  <motion.div 
+                    initial={{ rotate: -10, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    className="p-4 bg-current/5 rounded-[1.5rem]"
+                  >
+                    <Quote className="w-8 h-8 opacity-40" />
+                  </motion.div>
                   <div>
-                    <h3 className="font-serif text-2xl font-medium">{journalBook.title}</h3>
-                    <p className="text-sm opacity-40 italic">{journalBook.author}</p>
+                    <h3 className="font-serif text-3xl font-medium tracking-tight mb-1">{journalBook.title}</h3>
+                    <p className="text-sm opacity-40 uppercase tracking-[0.2em] font-medium">{journalBook.author}</p>
                   </div>
                 </div>
                 <button 
                   onClick={() => setJournalBook(null)}
-                  className="p-3 hover:bg-current/10 rounded-full transition-all"
+                  className="p-4 hover:bg-current/5 rounded-full transition-all group"
                 >
-                  <X className="w-6 h-6 opacity-40" />
+                  <X className="w-7 h-7 opacity-30 group-hover:opacity-100 transition-opacity" />
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-8 md:p-16 space-y-12 scrollbar-hide">
-                <div className="space-y-6">
+              <div className="flex-1 overflow-y-auto p-10 md:p-20 space-y-16 scrollbar-hide">
+                <section className="space-y-8">
                   <textarea 
                     value={newReflection}
                     onChange={(e) => setNewReflection(e.target.value)}
-                    placeholder="Apa yang gema dalam benakmu?"
-                    className="w-full h-40 bg-transparent border-none outline-none resize-none font-serif text-3xl leading-relaxed placeholder:opacity-10"
+                    placeholder="Goreskan pemikiran yang bersemi di benakmu..."
+                    className="w-full h-48 bg-transparent border-none outline-none resize-none font-serif text-4xl leading-relaxed placeholder:opacity-5 placeholder:italic focus:placeholder:opacity-0 transition-all"
                   />
-                  <div className="flex justify-end">
+                  <div className="flex justify-between items-center pt-8 border-t border-current/5">
+                    <span className="text-[10px] uppercase tracking-[0.3em] opacity-20 font-bold">
+                      Waktu Keheningan: {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                    </span>
                     <button 
                       onClick={handleAddReflection}
-                      className="px-10 py-4 bg-stone-900 dark:bg-white text-white dark:text-stone-900 rounded-full font-medium"
+                      className="px-12 py-5 bg-accent-sanc text-bg-sanc rounded-full font-bold shadow-xl hover:-translate-y-1 active:scale-95 transition-all text-sm tracking-wide"
                     >
-                      Sematkan Ingatan
+                      Abadikan Refleksi
                     </button>
                   </div>
-                </div>
+                </section>
 
-                <div className="space-y-10 pt-12 border-t border-current/5">
-                  {(journalBook.reflections || []).slice().reverse().map((ref) => (
-                    <div key={ref.id} className="relative pl-12 group">
-                      <div className="absolute left-0 top-1 w-1 h-32 bg-current/5 rounded-full" />
-                      <p className="text-2xl font-serif italic leading-relaxed opacity-80">{ref.content}</p>
-                      <p className="text-[10px] opacity-30 mt-6 uppercase tracking-widest">
-                        {new Date(ref.timestamp).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                      </p>
-                    </div>
-                  ))}
+                <div className="space-y-12">
+                  <h4 className="text-[10px] uppercase tracking-[0.4em] opacity-20 font-bold border-b border-current/5 pb-6">Goresan Terdahulu</h4>
                   
-                  {(!journalBook.reflections || journalBook.reflections.length === 0) && (
-                    <div className="text-center py-12 opacity-20 italic font-serif text-xl">
-                      Belum ada goresan tinta untuk buku ini.
-                    </div>
-                  )}
+                  <div className="space-y-12">
+                    {(journalBook.reflections || []).slice().reverse().map((ref, idx) => (
+                      <motion.div 
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: idx * 0.1 }}
+                        key={ref.id} 
+                        className="relative pl-14 group"
+                      >
+                        <div className="absolute left-0 top-2 w-1 h-full bg-current/[0.03] group-hover:bg-current/10 rounded-full transition-colors" />
+                        <div className="absolute left-[-2px] top-2 w-2 h-2 rounded-full bg-current/20" />
+                        <p className="text-3xl font-serif italic leading-relaxed opacity-80">{ref.content}</p>
+                        <p className="text-[10px] opacity-30 mt-8 uppercase tracking-[0.2em]">
+                          {new Date(ref.timestamp).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })} • {new Date(ref.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </motion.div>
+                    ))}
+                    
+                    {(!journalBook.reflections || journalBook.reflections.length === 0) && (
+                      <div className="text-center py-20 opacity-10 italic font-serif text-2xl">
+                        Halaman ini masih menunggu gema pikiranmu.
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -320,64 +350,100 @@ export default function App() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowAddBook(false)}
-              className="absolute inset-0 bg-stone-950/60 backdrop-blur-sm" 
+              className="absolute inset-0 bg-stone-950/60 backdrop-blur-md" 
             />
             <motion.div 
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="bg-cotton-50 dark:bg-stone-900 w-full max-w-lg rounded-[2.5rem] p-10 shadow-3xl relative z-10 border border-white/10"
+              initial={{ scale: 0.9, y: 30, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.9, y: 30, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="bg-bg-sanc w-full max-w-lg rounded-[3rem] p-10 md:p-14 shadow-3xl relative z-10 border border-border-sanc overflow-hidden"
             >
-              <h3 className="font-serif text-4xl mb-10 italic">
+              {/* Subtle background decoration */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-accent-sanc/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
+
+              <motion.h3 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                className="font-serif text-4xl mb-12 italic tracking-tight"
+              >
                 {editingBook ? 'Volume Refinement' : 'New Volume Ritual'}
-              </h3>
-              <form onSubmit={handleSaveBook} className="space-y-8">
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-bold tracking-widest opacity-40 ml-1">Nama Karya</label>
+              </motion.h3>
+
+              <form onSubmit={handleSaveBook} className="space-y-10 relative">
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="space-y-3"
+                >
+                  <label className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-30 ml-2">Gelar / Nama Karya</label>
                   <input 
                     autoFocus
                     required
                     value={newBook.title}
                     onChange={e => setNewBook({...newBook, title: e.target.value})}
                     type="text" 
-                    className="w-full bg-black/5 dark:bg-white/5 border border-current/10 rounded-2xl px-6 py-5 focus:outline-none focus:border-current/40 transition-all font-serif text-xl"
+                    placeholder="Judul yang bergaung..."
+                    className="w-full bg-current/5 border border-transparent rounded-2xl px-7 py-5 focus:outline-none focus:border-current/20 focus:bg-transparent transition-all font-serif text-2xl placeholder:opacity-10 placeholder:italic"
                   />
-                </div>
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] uppercase font-bold tracking-widest opacity-40 ml-1">Pujangga</label>
+                </motion.div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="space-y-3"
+                  >
+                    <label className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-30 ml-2">Sang Pujangga</label>
                     <input 
                       value={newBook.author}
                       onChange={e => setNewBook({...newBook, author: e.target.value})}
                       type="text" 
-                      className="w-full bg-black/5 dark:bg-white/5 border border-current/10 rounded-2xl px-6 py-5 focus:outline-none focus:border-current/40 transition-all"
+                      placeholder="Penulis..."
+                      className="w-full bg-current/5 border border-transparent rounded-2xl px-6 py-4 focus:outline-none focus:border-current/20 focus:bg-transparent transition-all font-sans text-lg placeholder:opacity-10"
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] uppercase font-bold tracking-widest opacity-40 ml-1">Genre</label>
+                  </motion.div>
+
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="space-y-3"
+                  >
+                    <label className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-30 ml-2">Aliran / Genre</label>
                     <input 
                       value={newBook.genre}
                       onChange={e => setNewBook({...newBook, genre: e.target.value})}
                       type="text"
-                      className="w-full bg-black/5 dark:bg-white/5 border border-current/10 rounded-2xl px-6 py-5 focus:outline-none focus:border-current/40 transition-all"
+                      placeholder="Sastra..."
+                      className="w-full bg-current/5 border border-transparent rounded-2xl px-6 py-4 focus:outline-none focus:border-current/20 focus:bg-transparent transition-all font-sans text-lg placeholder:opacity-10"
                     />
-                  </div>
+                  </motion.div>
                 </div>
-                <div className="flex gap-4 pt-4">
+
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="flex gap-6 pt-6"
+                >
                   <button 
                     type="button"
                     onClick={() => setShowAddBook(false)}
-                    className="flex-1 py-5 rounded-2xl font-bold opacity-40 hover:opacity-100 transition-opacity"
+                    className="flex-1 py-5 rounded-2xl font-bold opacity-30 hover:opacity-100 transition-opacity uppercase text-[10px] tracking-widest"
                   >
                     Batalkan
                   </button>
                   <button 
                     type="submit" 
-                    className="flex-[2] py-5 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 rounded-2xl font-bold hover:shadow-2xl transition-all"
+                    className="flex-[2] py-5 bg-accent-sanc text-bg-sanc rounded-2xl font-bold hover:shadow-2xl hover:-translate-y-1 active:scale-95 transition-all text-sm tracking-wide"
                   >
-                    Simpan Perubahan
+                    {editingBook ? 'Sempurnakan' : 'Simpan ke Rak'}
                   </button>
-                </div>
+                </motion.div>
               </form>
             </motion.div>
           </div>
@@ -387,7 +453,8 @@ export default function App() {
       <footer className="py-16 text-center opacity-20 text-[10px] tracking-[0.6em] uppercase font-light">
         — Terkurasi dalam Keheningan —
       </footer>
-    </div>
+      </motion.div>
+    </AnimatePresence>
   );
 }
 

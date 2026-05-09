@@ -6,41 +6,67 @@
   --font-serif: "Lora", ui-serif, Georgia, serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
-  /* Theme Colors: Soft Cotton, Midnight Indigo, Aged Paper */
+  /* Sanctuary Theme Mapping */
+  --color-bg-sanc: var(--bg-sanctuary);
+  --color-text-sanc: var(--text-sanctuary);
+  --color-border-sanc: var(--border-sanctuary);
+  --color-accent-sanc: var(--accent-sanctuary);
+
+  /* Raw Colors for utility usage */
   --color-cotton-50: #fdfcf0;
-  --color-cotton-100: #f8f6e3;
   --color-indigo-950: #0f172a;
-  --color-indigo-900: #1e293b;
   --color-sepia-50: #f4ecd8;
-  --color-sepia-100: #e8dab9;
-  --color-sepia-200: #d7c08d;
   --color-sepia-900: #433422;
 }
 
 @layer base {
+  :root {
+    --bg-sanctuary: #fdfcf0;
+    --text-sanctuary: #292524;
+    --border-sanctuary: rgba(0, 0, 0, 0.1);
+    --accent-sanctuary: #1c1917;
+  }
+
+  .theme-light {
+    --bg-sanctuary: #fdfcf0;
+    --text-sanctuary: #292524;
+    --border-sanctuary: rgba(0, 0, 0, 0.08);
+    --accent-sanctuary: #1c1917;
+  }
+
+  .theme-dark {
+    --bg-sanctuary: #0f172a;
+    --text-sanctuary: #e2e8f0;
+    --border-sanctuary: rgba(255, 255, 255, 0.08);
+    --accent-sanctuary: #f8fafc;
+  }
+
+  .theme-sepia {
+    --bg-sanctuary: #f4ecd8;
+    --text-sanctuary: #433422;
+    --border-sanctuary: rgba(67, 52, 34, 0.12);
+    --accent-sanctuary: #2d2419;
+  }
+
   body {
-    @apply transition-colors duration-700 ease-in-out font-sans antialiased;
+    background-color: var(--bg-sanctuary);
+    color: var(--text-sanctuary);
+    @apply transition-colors duration-1000 ease-in-out font-sans antialiased;
   }
   
   h1, h2, h3, h4, .font-serif {
     @apply font-serif tracking-tight;
   }
+
+  /* Universal border transition */
+  * {
+    border-color: var(--border-sanctuary);
+    @apply transition-colors duration-1000 ease-in-out;
+  }
 }
 
-.theme-light {
-  @apply bg-cotton-50 text-stone-800;
-}
-
-.theme-dark {
-  @apply bg-indigo-950 text-slate-200;
-}
-
-.theme-sepia {
-  @apply bg-sepia-50 text-sepia-900;
-}
-
-/* Glassmorphism for the sanctuary feel */
 .glass {
-  @apply backdrop-blur-md bg-white/5 border border-white/10;
+  @apply backdrop-blur-md border;
+  background-color: rgba(255, 255, 255, 0.03);
 }
 
