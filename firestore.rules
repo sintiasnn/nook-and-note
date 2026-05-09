@@ -12,13 +12,15 @@ service cloud.firestore {
     
     function isValidBook(data) {
       return data.keys().hasAll(['title', 'author', 'userId', 'addedAt']) &&
-        data.size() <= 6 &&
+        data.size() <= 8 &&
         data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
         data.author is string && data.author.size() > 0 && data.author.size() <= 200 &&
         data.userId == request.auth.uid &&
         data.addedAt is number &&
         (data.keys().hasAll(['genre']) ? (data.genre is string && data.genre.size() <= 100) : true) &&
-        (data.keys().hasAll(['coverUrl']) ? (data.coverUrl is string && data.coverUrl.size() <= 1000) : true);
+        (data.keys().hasAll(['coverUrl']) ? (data.coverUrl is string && data.coverUrl.size() <= 1000) : true) &&
+        (data.keys().hasAll(['status']) ? (data.status is string && data.status in ['reading', 'finished', 'unread']) : true) &&
+        (data.keys().hasAll(['rating']) ? (data.rating is number && data.rating >= 1 && data.rating <= 5) : true);
     }
 
     match /books/{bookId} {
@@ -33,7 +35,7 @@ service cloud.firestore {
         isValidBook(incoming()) &&
         incoming().userId == existing().userId &&
         incoming().addedAt == existing().addedAt &&
-        incoming().diff(existing()).affectedKeys().hasOnly(['title', 'author', 'genre', 'coverUrl']);
+        incoming().diff(existing()).affectedKeys().hasOnly(['title', 'author', 'genre', 'coverUrl', 'status', 'rating']);
         
       allow delete: if isSignedIn() && isValidId(bookId) && existing().userId == request.auth.uid;
 

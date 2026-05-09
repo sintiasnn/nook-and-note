@@ -20,6 +20,9 @@ interface IBook {
   genre: string;
   userId: string;
   addedAt: number;
+  coverUrl?: string;
+  status?: 'unread' | 'reading' | 'finished';
+  rating?: number;
   reflections?: IReflection[];
 }
 
@@ -38,10 +41,13 @@ export default function App() {
   const [loadingAuth, setLoadingAuth] = useState(true);
   const [theme, setTheme] = useState<Theme>('sepia');
   const [books, setBooks] = useState<IBook[]>([]);
+  const [filterStatus, setFilterStatus] = useState<string>('all');
   const [showAddBook, setShowAddBook] = useState(false);
   const [editingBook, setEditingBook] = useState<IBook | null>(null);
   const [journalBook, setJournalBook] = useState<IBook | null>(null);
-  const [newBook, setNewBook] = useState({ title: '', author: '', genre: '' });
+  const [newBook, setNewBook] = useState<{title: string; author: string; genre: string; coverUrl: string; status: 'unread'|'reading'|'finished'; rating: number}>({ 
+    title: '', author: '', genre: '', coverUrl: '', status: 'unread', rating: 0 
+  });
   const [newReflection, setNewReflection] = useState('');
   
   const affirmation = useMemo(() => {
@@ -120,23 +126,26 @@ export default function App() {
     if (!newBook.title || !user) return;
     
     try {
+      const bookDataToSave = {
+        title: newBook.title,
+        author: newBook.author || 'Anonim',
+        genre: newBook.genre,
+        coverUrl: newBook.coverUrl,
+        status: newBook.status,
+        rating: newBook.rating,
+      };
+
       if (editingBook) {
-        await updateDoc(doc(db, 'books', editingBook.id), {
-          title: newBook.title,
-          author: newBook.author,
-          genre: newBook.genre,
-        });
+        await updateDoc(doc(db, 'books', editingBook.id), bookDataToSave);
       } else {
         await addDoc(collection(db, 'books'), {
-          title: newBook.title,
-          author: newBook.author || 'Anonim',
-          genre: newBook.genre,
+          ...bookDataToSave,
           userId: user.uid,
           addedAt: Date.now(),
         });
       }
       
-      setNewBook({ title: '', author: '', genre: '' });
+      setNewBook({ title: '', author: '', genre: '', coverUrl: '', status: 'unread', rating: 0 });
       setShowAddBook(false);
       setEditingBook(null);
     } catch (err) {
@@ -290,7 +299,7 @@ export default function App() {
             <button 
               onClick={() => {
                 setEditingBook(null);
-                setNewBook({ title: '', author: '', genre: '' });
+                setNewBook({ title: '', author: '', genre: '', coverUrl: '', status: 'unread', rating: 0 });
                 setShowAddBook(true);
               }}
               className="px-8 py-4 bg-accent-sanc text-bg-sanc rounded-full hover:shadow-2xl transition-all flex items-center gap-3 group"
@@ -304,41 +313,85 @@ export default function App() {
 
       {/* Bookshelf */}
       <main className="flex-1 px-8 md:px-16 pb-24">
+        
+        {books.length > 0 && (
+          <div className="max-w-7xl mx-auto mb-10 flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+            {['all', 'unread', 'reading', 'finished'].map(status => (
+              <button 
+                key={status} 
+                onClick={() => setFilterStatus(status)}
+                className={`px-5 py-2 rounded-full border transition-all text-xs font-bold uppercase tracking-widest ${
+                  filterStatus === status 
+                    ? 'border-current bg-current text-bg-sanc' 
+                    : 'border-current/20 hover:border-current/50 opacity-50 hover:opacity-100'
+                }`}
+              >
+                {status === 'all' ? 'Semua' : status === 'unread' ? 'Belum Dibaca' : status === 'reading' ? 'Sedang Dibaca' : 'Selesai'}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12 max-w-7xl mx-auto">
-          {books.map((book, idx) => (
+          {books.filter(b => filterStatus === 'all' || b.status === filterStatus).map((book, idx) => (
             <motion.div
               layout
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05 }}
               key={book.id}
-              className="group aspect-[3/4.5] relative rounded-[2rem] p-8 flex flex-col border border-current/10 hover:border-current/30 transition-all hover:shadow-2xl hover:-translate-y-2 overflow-hidden"
+              className="group aspect-[3/4.5] relative rounded-[2rem] p-8 flex flex-col border border-current/10 hover:border-current/30 transition-all hover:shadow-2xl hover:-translate-y-2 overflow-hidden bg-cover bg-center"
+              style={{
+                backgroundImage: book.coverUrl ? `linear-gradient(to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url(${book.coverUrl})` : 'none',
+                color: book.coverUrl ? '#E5E5E5' : 'inherit',
+                borderColor: book.coverUrl ? 'rgba(255,255,255,0.1)' : ''
+              }}
             >
               <div className="absolute top-0 left-0 w-2 h-full bg-current/5" />
               
-              <div className="flex-1">
-                <span className="text-[10px] uppercase tracking-widest opacity-30 font-bold mb-3 block">{book.genre || 'Sastra'}</span>
-                <h3 className="font-serif text-3xl leading-snug group-hover:italic transition-all duration-500 mb-2">{book.title}</h3>
-                <p className="opacity-50 text-sm font-medium italic">{book.author}</p>
+              <div className="flex-1 relative z-10">
+                <div className="flex justify-between items-start mb-3">
+                  <span className={`text-[10px] uppercase tracking-widest font-bold px-3 py-1 rounded-full ${book.coverUrl ? 'bg-white/10 text-white' : 'bg-current/5'} opacity-80 backdrop-blur-sm`}>
+                    {book.genre || 'Sastra'}
+                  </span>
+                  
+                  {book.rating ? (
+                    <div className="flex gap-0.5">
+                      {Array.from({ length: book.rating }).map((_, i) => (
+                        <Heart key={i} className={`w-3 h-3 fill-current ${book.coverUrl ? 'text-white' : ''}`} />
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+                
+                <h3 className={`font-serif text-3xl leading-snug group-hover:italic transition-all duration-500 mb-2 mt-4`}>{book.title}</h3>
+                <p className={`opacity-70 text-sm font-medium italic`}>{book.author}</p>
               </div>
 
-              <div className="flex items-center justify-between mt-auto pt-6 border-t border-current/5">
+              <div className="flex items-center justify-between mt-auto pt-6 border-t relative z-10" style={{ borderColor: book.coverUrl ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }}>
                 <div className="flex gap-2">
                   <button 
                     onClick={() => setJournalBook(book)}
                     title="Buka Jurnal"
-                    className="p-3 bg-current/5 rounded-full hover:bg-current/10 transition-colors"
+                    className={`p-3 rounded-full transition-colors ${book.coverUrl ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-current/5 hover:bg-current/10'}`}
                   >
                     <PenTool className="w-4 h-4" />
                   </button>
                   <button 
                     onClick={() => {
                       setEditingBook(book);
-                      setNewBook({ title: book.title, author: book.author, genre: book.genre });
+                      setNewBook({ 
+                        title: book.title, 
+                        author: book.author, 
+                        genre: book.genre,
+                        coverUrl: book.coverUrl || '',
+                        status: book.status || 'unread',
+                        rating: book.rating || 0
+                      });
                       setShowAddBook(true);
                     }}
                     title="Ubah Volume"
-                    className="p-3 bg-current/5 rounded-full hover:bg-current/10 transition-colors"
+                    className={`p-3 rounded-full transition-colors ${book.coverUrl ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-current/5 hover:bg-current/10'}`}
                   >
                     <Edit3 className="w-4 h-4" />
                   </button>
@@ -346,7 +399,7 @@ export default function App() {
                 <button 
                   onClick={() => handleDeleteBook(book.id)}
                   title="Hapus"
-                  className="p-3 hover:text-red-500 transition-colors opacity-30 hover:opacity-100"
+                  className={`p-3 transition-colors opacity-50 hover:opacity-100 ${book.coverUrl ? 'hover:text-red-400 text-white' : 'hover:text-red-500'}`}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -544,6 +597,63 @@ export default function App() {
                       placeholder="Sastra..."
                       className="w-full bg-current/5 border border-transparent rounded-2xl px-6 py-4 focus:outline-none focus:border-current/20 focus:bg-transparent transition-all font-sans text-lg placeholder:opacity-10"
                     />
+                  </motion.div>
+                </div>
+                
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.45 }}
+                  className="space-y-3"
+                >
+                  <label className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-30 ml-2">Sampul Buku (URL)</label>
+                  <input 
+                    value={newBook.coverUrl}
+                    onChange={e => setNewBook({...newBook, coverUrl: e.target.value})}
+                    type="url"
+                    placeholder="https://..."
+                    className="w-full bg-current/5 border border-transparent rounded-2xl px-6 py-4 focus:outline-none focus:border-current/20 focus:bg-transparent transition-all font-sans text-sm placeholder:opacity-10"
+                  />
+                </motion.div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.46 }}
+                    className="space-y-3"
+                  >
+                    <label className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-30 ml-2">Status</label>
+                    <select
+                      value={newBook.status}
+                      onChange={e => setNewBook({...newBook, status: e.target.value as any})}
+                      className="w-full bg-current/5 border border-transparent rounded-2xl px-6 py-4 focus:outline-none focus:border-current/20 focus:bg-transparent transition-all font-sans text-lg outline-none appearance-none cursor-pointer"
+                    >
+                      <option value="unread" className="bg-bg-sanc">Belum Dibaca</option>
+                      <option value="reading" className="bg-bg-sanc">Sedang Dibaca</option>
+                      <option value="finished" className="bg-bg-sanc">Selesai</option>
+                    </select>
+                  </motion.div>
+
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.47 }}
+                    className="space-y-3"
+                  >
+                    <label className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-30 ml-2">Penilaian</label>
+                    <div className="flex gap-2 items-center bg-current/5 rounded-2xl px-6 py-4">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setNewBook({...newBook, rating: star === newBook.rating ? 0 : star})}
+                          className={`p-1 transition-transform hover:scale-110 ${newBook.rating >= star ? 'text-accent-sanc' : 'opacity-20'}`}
+                        >
+                          <Heart className={newBook.rating >= star ? 'fill-current' : ''} />
+                        </button>
+                      ))}
+                    </div>
                   </motion.div>
                 </div>
 
