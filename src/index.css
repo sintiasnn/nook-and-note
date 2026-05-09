@@ -6,11 +6,10 @@
   --font-serif: "Lora", ui-serif, Georgia, serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   
-  /* Dynamic App Colors */
-  --color-bg-sanc: var(--bg-sanctuary);
-  --color-text-sanc: var(--text-sanctuary);
-  --color-border-sanc: var(--border-sanctuary);
-  --color-accent-sanc: var(--accent-sanctuary);
+  --color-bg-sanc: #fdfcf0;
+  --color-text-sanc: #292524;
+  --color-border-sanc: rgba(0, 0, 0, 0.1);
+  --color-accent-sanc: #1c1917;
 
   /* Default Transition for Theme Switcher */
   --default-transition-duration: 0.15s;
@@ -18,41 +17,33 @@
 }
 
 @layer base {
-  :root {
-    --bg-sanctuary: #fdfcf0;
-    --text-sanctuary: #292524;
-    --border-sanctuary: rgba(0, 0, 0, 0.1);
-    --accent-sanctuary: #1c1917;
-    color-scheme: light;
-  }
-
-  .theme-light {
-    --bg-sanctuary: #fdfcf0;
-    --text-sanctuary: #292524;
-    --border-sanctuary: rgba(0, 0, 0, 0.08);
-    --accent-sanctuary: #1c1917;
+  :root, .theme-light {
+    --color-bg-sanc: #fdfcf0;
+    --color-text-sanc: #292524;
+    --color-border-sanc: rgba(0, 0, 0, 0.1);
+    --color-accent-sanc: #1c1917;
     color-scheme: light;
   }
 
   .theme-dark {
-    --bg-sanctuary: #0f172a;
-    --text-sanctuary: #e2e8f0;
-    --border-sanctuary: rgba(255, 255, 255, 0.08);
-    --accent-sanctuary: #f8fafc;
+    --color-bg-sanc: #0f172a;
+    --color-text-sanc: #e2e8f0;
+    --color-border-sanc: rgba(255, 255, 255, 0.08);
+    --color-accent-sanc: #f8fafc;
     color-scheme: dark;
   }
 
   .theme-sepia {
-    --bg-sanctuary: #f4ecd8;
-    --text-sanctuary: #433422;
-    --border-sanctuary: rgba(67, 52, 34, 0.12);
-    --accent-sanctuary: #2d2419;
+    --color-bg-sanc: #f4ecd8;
+    --color-text-sanc: #433422;
+    --color-border-sanc: rgba(67, 52, 34, 0.12);
+    --color-accent-sanc: #2d2419;
     color-scheme: light;
   }
 
   body {
-    background-color: var(--bg-sanctuary);
-    color: var(--text-sanctuary);
+    background-color: var(--color-bg-sanc);
+    color: var(--color-text-sanc);
     @apply transition-colors duration-1000 ease-in-out font-sans antialiased;
   }
   
@@ -62,7 +53,7 @@
 
   /* Universal border transition */
   * {
-    border-color: var(--border-sanctuary);
+    border-color: var(--color-border-sanc);
     @apply transition-colors duration-1000 ease-in-out;
   }
 }

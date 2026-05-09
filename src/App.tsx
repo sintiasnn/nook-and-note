@@ -605,14 +605,9 @@ export default function App() {
                 onClick={() => setFilterStatus(status)}
                 className={`px-5 py-2 rounded-full border transition-all text-xs font-bold uppercase tracking-widest ${
                   filterStatus === status 
-                    ? 'opacity-100' 
+                    ? 'bg-text-sanc text-bg-sanc border-text-sanc opacity-100' 
                     : 'border-current/20 hover:border-current/50 opacity-50 hover:opacity-100'
                 }`}
-                style={filterStatus === status ? { 
-                  backgroundColor: 'var(--text-sanctuary)', 
-                  color: 'var(--bg-sanctuary)', 
-                  borderColor: 'var(--text-sanctuary)' 
-                } : {}}
               >
                 {status === 'all' ? t["filter.all"] : status === 'unread' ? t["filter.unread"] : status === 'reading' ? t["filter.reading"] : t["filter.finished"]}
               </button>
@@ -712,7 +707,7 @@ export default function App() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] flex items-center justify-center p-6 md:p-12"
+            className={`fixed inset-0 z-[200] flex items-center justify-center p-6 md:p-12 theme-${theme}`}
           >
             <motion.div 
               initial={{ opacity: 0 }}
@@ -817,7 +812,7 @@ export default function App() {
       {/* Edit/Add Modal */}
       <AnimatePresence>
         {showAddBook && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+          <div className={`fixed inset-0 z-[100] flex items-center justify-center p-6 theme-${theme}`}>
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -983,7 +978,7 @@ export default function App() {
       {/* Confirm Modal */}
       <AnimatePresence>
         {confirmModal && confirmModal.isOpen && (
-          <div className="fixed inset-0 z-[300] flex items-center justify-center p-6">
+          <div className={`fixed inset-0 z-[300] flex items-center justify-center p-6 theme-${theme}`}>
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
