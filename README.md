@@ -30,16 +30,22 @@ Build a lightweight, serene web application to track books and save reflective n
 ## Project Structure
 ```text
 nook-and-note/
-├── data/                   # Sanctuary Archives (JSON storage)
-│   ├── books.json          # Book collection & reflections
-│   └── journal.json        # General reflections
+├── public/                 # Static Assets (favicon, icons)
 ├── src/                    # Frontend (React + Vite)
+│   ├── lib/
+│   │   └── firebase.ts     # Firebase Configuration & Auth
 │   ├── App.tsx             # Main Sanctuary Logic
 │   ├── index.css           # Aesthetic Definitions (Tailwind + Themes)
 │   └── main.tsx            # Entry Point
-├── server.ts               # The Librarian (Express Backend)
-├── package.json            # Sanctuary Inventory
-└── metadata.json           # App Metadata
+├── index.html              # Main HTML Document
+├── firestore.rules         # Firebase Security Rules
+├── package.json            # Sanctuary Inventory & Scripts
+├── vite.config.ts          # Vite Configuration
+├── tsconfig.json           # TypeScript Configuration
+├── eslint.config.js        # ESLint Configuration
+├── metadata.json           # App Metadata
+├── .gitignore              # Ignored Files Mapping
+└── README.md               # Project Documentation
 ```
 
 ---
@@ -71,8 +77,7 @@ Refine and update book information through a serene and intuitive interface.
 
 ## Tech Stack
 - **Frontend**: React 18, Vite, Tailwind CSS, Framer Motion (motion/react).
-- **Backend**: Node.js with Express.js.
-- **Storage**: Local JSON (data/books.json) for simplicity and privacy.
+- **Backend & Storage**: Firebase (Authentication and Firestore) for cloud sync and privacy.
 - **Typography**: 
   - **Lora**: Classic Serif for a literary feel.
   - **Montserrat**: Clean Sans-Serif for functional UI nodes.
