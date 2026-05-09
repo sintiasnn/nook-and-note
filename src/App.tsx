@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Book, PenTool, Moon, Sun, Coffee, BookOpen, Plus, Trash2, X, Quote, Edit3, Heart, ArrowRight, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { auth, db } from './lib/firebase';
@@ -67,6 +67,10 @@ const translations = {
     "footer": "— Terkurasi dalam Keheningan —",
     "auth.logout": "Keluar",
     "confirm.delete": "Apakah koleksi ini benar-benar harus pergi?",
+    "confirm.update": "Apakah Anda yakin ingin menyimpan perubahan ini?",
+    "confirm.yes_delete": "Ya, hapus",
+    "confirm.yes_update": "Ya, simpan",
+    "confirm.cancel": "Batal",
     "affirmations": [
       "Buku adalah saku yang penuh dengan mimpi.",
       "Membaca memberi kita tempat untuk pergi ketika kita harus tetap di tempat kita berada.",
@@ -117,6 +121,10 @@ const translations = {
     "footer": "— Curated in Silence —",
     "auth.logout": "Sign out",
     "confirm.delete": "Should this collection really leave?",
+    "confirm.update": "Are you sure you want to save these changes?",
+    "confirm.yes_delete": "Yes, delete",
+    "confirm.yes_update": "Yes, save",
+    "confirm.cancel": "Cancel",
     "affirmations": [
       "A book is a pocket full of dreams.",
       "Reading gives us someplace to go when we have to stay where we are.",
@@ -146,6 +154,16 @@ export default function App() {
     title: '', author: '', genre: '', coverUrl: '', status: 'unread', rating: 0 
   });
   const [newReflection, setNewReflection] = useState('');
+  
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title?: string;
+    message: string;
+    onConfirm: () => void;
+    confirmText?: string;
+    cancelText?: string;
+    isDestructive?: boolean;
+  } | null>(null);
   
   const affirmation = useMemo(() => {
     const list = t.affirmations;
@@ -224,54 +242,163 @@ export default function App() {
     e.preventDefault();
     if (!newBook.title || !user) return;
     
-    try {
-      const bookDataToSave = {
-        title: newBook.title,
-        author: newBook.author || 'Anonim',
-        genre: newBook.genre,
-        coverUrl: newBook.coverUrl,
-        status: newBook.status,
-        rating: newBook.rating,
-      };
+    const performSave = async () => {
+      try {
+        const bookDataToSave: any = {
+          title: newBook.title,
+          status: newBook.status,
+        };
+        if (newBook.author) bookDataToSave.author = newBook.author;
+        else bookDataToSave.author = 'Anonim';
+        
+        if (newBook.genre) bookDataToSave.genre = newBook.genre;
+        if (newBook.coverUrl) bookDataToSave.coverUrl = newBook.coverUrl;
+        if (newBook.rating && newBook.rating > 0) bookDataToSave.rating = newBook.rating;
 
-      if (editingBook) {
-        await updateDoc(doc(db, 'books', editingBook.id), bookDataToSave);
-      } else {
-        await addDoc(collection(db, 'books'), {
-          ...bookDataToSave,
-          userId: user.uid,
-          addedAt: Date.now(),
-        });
+        if (editingBook) {
+          await updateDoc(doc(db, 'books', editingBook.id), bookDataToSave);
+        } else {
+          await addDoc(collection(db, 'books'), {
+            ...bookDataToSave,
+            userId: user.uid,
+            addedAt: Date.now(),
+          });
+        }
+        
+        setNewBook({ title: '', author: '', genre: '', coverUrl: '', status: 'unread', rating: 0 });
+        setShowAddBook(false);
+        setEditingBook(null);
+      } catch (err: any) {
+        console.error('Failed to save book', err);
+        // Detailed error for rules
+        const errInfo = {
+          message: err.message,
+          payload: {
+            title: newBook.title,
+            status: newBook.status,
+            userId: user.uid,
+            addedAt: Date.now(),
+          },
+        };
+        alert('Gagal menyimapan buku: ' + JSON.stringify(errInfo, null, 2));
       }
-      
-      setNewBook({ title: '', author: '', genre: '', coverUrl: '', status: 'unread', rating: 0 });
-      setShowAddBook(false);
-      setEditingBook(null);
-    } catch (err) {
-      console.error('Failed to save book', err);
+    };
+
+    if (editingBook) {
+      setConfirmModal({
+        isOpen: true,
+        message: t["confirm.update"],
+        onConfirm: () => {
+          setConfirmModal(null);
+          performSave();
+        },
+        confirmText: t["confirm.yes_update"],
+        cancelText: t["confirm.cancel"]
+      });
+    } else {
+      performSave();
     }
   };
 
   const handleAddReflection = async () => {
     if (!newReflection.trim() || !journalBook || !user) return;
     try {
-      await addDoc(collection(db, `books/${journalBook.id}/reflections`), {
+      const payload = {
         content: newReflection,
         timestamp: Date.now()
+      };
+      const docRef = await addDoc(collection(db, `books/${journalBook.id}/reflections`), payload);
+      
+      const newRef = { id: docRef.id, ...payload };
+      
+      setJournalBook(prev => {
+        if (!prev) return prev;
+        return { ...prev, reflections: [...(prev.reflections || []), newRef] };
       });
+      
+      setBooks(prev => prev.map(b => {
+        if (b.id === journalBook.id) {
+          return { ...b, reflections: [...(b.reflections || []), newRef] };
+        }
+        return b;
+      }));
+      
       setNewReflection('');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to add reflection', err);
+      // Detailed error for rules
+      const errInfo = {
+        message: err.message,
+        payload: {
+          content: newReflection,
+          timestamp: Date.now()
+        },
+      };
+      alert('Gagal menyimapan kutipan: ' + JSON.stringify(errInfo, null, 2));
     }
   };
 
+  const handleDeleteReflection = async (refId: string) => {
+    if (!journalBook) return;
+    
+    setConfirmModal({
+      isOpen: true,
+      message: t["confirm.delete"],
+      isDestructive: true,
+      confirmText: t["confirm.yes_delete"],
+      cancelText: t["confirm.cancel"],
+      onConfirm: async () => {
+        setConfirmModal(null);
+        try {
+          await deleteDoc(doc(db, `books/${journalBook.id}/reflections`, refId));
+          
+          setJournalBook(prev => {
+            if (!prev) return prev;
+            return { ...prev, reflections: (prev.reflections || []).filter(r => r.id !== refId) };
+          });
+          
+          setBooks(prev => prev.map(b => {
+            if (b.id === journalBook.id) {
+              return { ...b, reflections: (b.reflections || []).filter(r => r.id !== refId) };
+            }
+            return b;
+          }));
+          
+        } catch (err: any) {
+          console.error('Failed to delete reflection', err);
+          // Detailed error for rules
+          const errInfo = {
+            message: err.message,
+            path: `books/${journalBook.id}/reflections/${refId}`
+          };
+          alert('Gagal menghapus kutipan: ' + JSON.stringify(errInfo, null, 2));
+        }
+      }
+    });
+  };
+
   const handleDeleteBook = async (id: string) => {
-    if (!confirm(t["confirm.delete"])) return;
-    try {
-      await deleteDoc(doc(db, 'books', id));
-    } catch (err) {
-      console.error('Failed to delete book', err);
-    }
+    setConfirmModal({
+      isOpen: true,
+      message: t["confirm.delete"],
+      isDestructive: true,
+      confirmText: t["confirm.yes_delete"],
+      cancelText: t["confirm.cancel"],
+      onConfirm: async () => {
+        setConfirmModal(null);
+        try {
+          await deleteDoc(doc(db, 'books', id));
+        } catch (err: any) {
+          console.error('Failed to delete book', err);
+          // Detailed error for rules
+          const errInfo = {
+            message: err.message,
+            path: `books/${id}`
+          };
+          alert('Gagal menghapus buku: ' + JSON.stringify(errInfo, null, 2));
+        }
+      }
+    });
   };
 
   const themesData: { id: Theme; icon: any; label: string; textKey: keyof typeof translations['id'] }[] = [
@@ -360,46 +487,46 @@ export default function App() {
         className={`min-h-screen flex flex-col font-sans theme-${theme}`}
       >
         {/* Soft Header */}
-      <header className="px-8 py-10 md:px-16 md:py-16 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+      <header className="px-6 py-10 md:px-16 md:py-16 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
         <div>
           <div className="flex items-center gap-3 mb-4">
-            <BookOpen className="w-8 h-8 opacity-40" />
-            <h1 className="text-4xl font-serif italic font-medium tracking-tight">Nook & Note</h1>
+            <BookOpen className="w-8 h-8 opacity-40 shrink-0" />
+            <h1 className="text-3xl md:text-4xl font-serif italic font-medium tracking-tight">Nook & Note</h1>
           </div>
           <motion.p 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-lg font-serif italic opacity-40 max-w-md leading-relaxed"
+            className="text-base md:text-lg font-serif italic opacity-40 max-w-md leading-relaxed"
           >
             "{affirmation}"
           </motion.p>
         </div>
 
-        <div className="flex flex-col items-end gap-6">
-          <div className="flex items-center gap-4">
-            <p className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold">{user.displayName || user.email}</p>
+        <div className="flex flex-col items-start md:items-end gap-6 w-full md:w-auto">
+          <div className="flex items-center justify-between md:justify-end w-full gap-4">
+            <p className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold truncate max-w-[150px] md:max-w-none">{user.displayName || user.email}</p>
             <button onClick={handleLogout} className="p-2 opacity-30 hover:opacity-100 transition-opacity" title={t["auth.logout"]}>
               <LogOut className="w-4 h-4" />
             </button>
           </div>
           
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 p-1.5 rounded-full border border-current opacity-20 text-xs font-bold uppercase overflow-hidden">
+          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            <div className="flex items-center gap-2 p-1.5 rounded-full border border-current opacity-20 text-xs font-bold uppercase overflow-hidden shrink-0">
               <button onClick={() => setLang('id')} className={`px-2 py-1 rounded-full ${lang === 'id' ? 'bg-current text-bg-sanc' : ''}`}>ID</button>
               <button onClick={() => setLang('en')} className={`px-2 py-1 rounded-full ${lang === 'en' ? 'bg-current text-bg-sanc' : ''}`}>EN</button>
             </div>
-            <div className="flex items-center gap-1.5 p-1.5 rounded-full border border-current opacity-20">
+            <div className="flex items-center gap-1.5 p-1.5 rounded-full border border-current opacity-20 shrink-0">
               {themesData.map((themeData) => (
                 <button
                   key={themeData.id}
                   onClick={() => setTheme(themeData.id)}
                   title={t[themeData.textKey]}
-                  className={`p-2 rounded-full transition-all ${
+                  className={`p-1.5 md:p-2 rounded-full transition-all ${
                     theme === themeData.id ? 'bg-current shadow-sm scale-110' : 'hover:scale-110'
                   }`}
                 >
                   <div className={theme === themeData.id ? 'mix-blend-difference' : ''}>
-                    <themeData.icon className="w-4 h-4" />
+                    <themeData.icon className="w-3 h-3 md:w-4 md:h-4" />
                   </div>
                 </button>
               ))}
@@ -410,17 +537,17 @@ export default function App() {
                 setNewBook({ title: '', author: '', genre: '', coverUrl: '', status: 'unread', rating: 0 });
                 setShowAddBook(true);
               }}
-              className="px-8 py-4 bg-accent-sanc text-bg-sanc rounded-full hover:shadow-2xl transition-all flex items-center gap-3 group"
+              className="px-6 md:px-8 py-3 md:py-4 bg-accent-sanc text-bg-sanc rounded-full hover:shadow-2xl transition-all flex items-center gap-3 group ml-auto md:ml-0"
             >
-              <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
-              <span className="font-medium">{t["header.ritual"]}</span>
+              <Plus className="w-4 h-4 md:w-5 md:h-5 group-hover:rotate-90 transition-transform" />
+              <span className="font-medium text-sm md:text-base">{t["header.ritual"]}</span>
             </button>
           </div>
         </div>
       </header>
 
       {/* Bookshelf */}
-      <main className="flex-1 px-8 md:px-16 pb-24">
+      <main className="flex-1 px-6 md:px-16 pb-24">
         
         {books.length > 0 && (
           <div className="max-w-7xl mx-auto mb-10 flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
@@ -546,39 +673,39 @@ export default function App() {
               animate={{ scale: 1, y: 0, opacity: 1 }}
               exit={{ scale: 0.95, y: 40, opacity: 0 }}
               transition={{ type: "spring", damping: 30, stiffness: 150 }}
-              className="w-full max-w-4xl h-full max-h-[85vh] bg-bg-sanc rounded-[3rem] shadow-3xl relative z-10 overflow-hidden flex flex-col border border-border-sanc"
+              className="w-full max-w-4xl h-full max-h-[90vh] bg-bg-sanc rounded-[2rem] md:rounded-[3rem] shadow-3xl relative z-10 overflow-hidden flex flex-col border border-border-sanc"
             >
-              <div className="p-8 md:p-14 border-b border-current/5 flex justify-between items-center bg-current/[0.02]">
-                <div className="flex items-center gap-6">
+              <div className="p-6 md:p-14 border-b border-current/5 flex justify-between items-start md:items-center bg-current/[0.02] gap-4">
+                <div className="flex items-center gap-4 md:gap-6">
                   <motion.div 
                     initial={{ rotate: -10, opacity: 0 }}
                     animate={{ rotate: 0, opacity: 1 }}
-                    className="p-4 bg-current/5 rounded-[1.5rem]"
+                    className="p-3 md:p-4 bg-current/5 rounded-[1rem] md:rounded-[1.5rem] shrink-0"
                   >
-                    <Quote className="w-8 h-8 opacity-40" />
+                    <Quote className="w-5 h-5 md:w-8 md:h-8 opacity-40" />
                   </motion.div>
                   <div>
-                    <h3 className="font-serif text-3xl font-medium tracking-tight mb-1">{journalBook.title}</h3>
-                    <p className="text-sm opacity-40 uppercase tracking-[0.2em] font-medium">{journalBook.author}</p>
+                    <h3 className="font-serif text-2xl md:text-3xl font-medium tracking-tight mb-1">{journalBook.title}</h3>
+                    <p className="text-xs md:text-sm opacity-40 uppercase tracking-[0.2em] font-medium">{journalBook.author}</p>
                   </div>
                 </div>
                 <button 
                   onClick={() => setJournalBook(null)}
-                  className="p-4 hover:bg-current/5 rounded-full transition-all group"
+                  className="p-2 md:p-4 hover:bg-current/5 rounded-full transition-all group shrink-0"
                 >
-                  <X className="w-7 h-7 opacity-30 group-hover:opacity-100 transition-opacity" />
+                  <X className="w-6 h-6 md:w-7 md:h-7 opacity-30 group-hover:opacity-100 transition-opacity" />
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-10 md:p-20 space-y-16 scrollbar-hide">
-                <section className="space-y-8">
+              <div className="flex-1 overflow-y-auto p-6 md:p-20 space-y-12 md:space-y-16 scrollbar-hide">
+                <section className="space-y-6 md:space-y-8">
                   <textarea 
                     value={newReflection}
                     onChange={(e) => setNewReflection(e.target.value)}
                     placeholder={t["journal.placeholder"]}
-                    className="w-full h-48 bg-transparent border-none outline-none resize-none font-serif text-4xl leading-relaxed placeholder:opacity-5 placeholder:italic focus:placeholder:opacity-0 transition-all"
+                    className="w-full h-32 md:h-48 bg-transparent border-none outline-none resize-none font-serif text-2xl md:text-4xl leading-relaxed placeholder:opacity-5 placeholder:italic focus:placeholder:opacity-0 transition-all"
                   />
-                  <div className="flex justify-between items-center pt-8 border-t border-current/5">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center pt-6 md:pt-8 border-t border-current/5 gap-6">
                     <span className="text-[10px] uppercase tracking-[0.3em] opacity-20 font-bold">
                       {t["journal.time"]} {new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'short' })}
                     </span>
@@ -606,9 +733,18 @@ export default function App() {
                         <div className="absolute left-0 top-2 w-1 h-full bg-current/[0.03] group-hover:bg-current/10 rounded-full transition-colors" />
                         <div className="absolute left-[-2px] top-2 w-2 h-2 rounded-full bg-current/20" />
                         <p className="text-3xl font-serif italic leading-relaxed opacity-80">{ref.content}</p>
-                        <p className="text-[10px] opacity-30 mt-8 uppercase tracking-[0.2em]">
-                          {new Date(ref.timestamp).toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })} • {new Date(ref.timestamp).toLocaleTimeString(lang === 'id' ? 'id-ID' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
-                        </p>
+                        <div className="flex items-center gap-4 mt-8">
+                          <p className="text-[10px] opacity-30 uppercase tracking-[0.2em]">
+                            {new Date(ref.timestamp).toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })} • {new Date(ref.timestamp).toLocaleTimeString(lang === 'id' ? 'id-ID' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                          <button 
+                            onClick={() => ref.id && handleDeleteReflection(ref.id)}
+                            className="p-1.5 hover:bg-red-500/10 hover:text-red-600 rounded-full opacity-0 group-hover:opacity-100 transition-all text-current/40"
+                            title={t["confirm.delete"]}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </motion.div>
                     ))}
                     
@@ -641,7 +777,7 @@ export default function App() {
               animate={{ scale: 1, y: 0, opacity: 1 }}
               exit={{ scale: 0.9, y: 30, opacity: 0 }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="bg-bg-sanc w-full max-w-lg rounded-[3rem] p-10 md:p-14 shadow-3xl relative z-10 border border-border-sanc overflow-hidden"
+              className="bg-bg-sanc w-full max-w-lg rounded-[2rem] md:rounded-[3rem] p-6 md:p-14 shadow-3xl relative z-10 border border-border-sanc overflow-y-auto max-h-[90vh]"
             >
               {/* Subtle background decoration */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-accent-sanc/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
@@ -786,6 +922,49 @@ export default function App() {
                   </button>
                 </motion.div>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Confirm Modal */}
+      <AnimatePresence>
+        {confirmModal && confirmModal.isOpen && (
+          <div className="fixed inset-0 z-[300] flex items-center justify-center p-6">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-bg-sanc/90 backdrop-blur-xl"
+              onClick={() => setConfirmModal(null)}
+            />
+            <motion.div 
+              initial={{ scale: 0.9, y: 20, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.9, y: 20, opacity: 0 }}
+              className="bg-bg-sanc w-full max-w-sm rounded-[2rem] p-8 shadow-3xl relative z-10 border border-border-sanc"
+            >
+              <div className="text-center space-y-6">
+                {confirmModal.title && <h3 className="font-serif text-2xl font-medium">{confirmModal.title}</h3>}
+                <p className="text-base font-serif italic text-current/70">{confirmModal.message}</p>
+                
+                <div className="flex gap-4 pt-4">
+                  <button 
+                    onClick={() => setConfirmModal(null)}
+                    className="flex-1 py-4 rounded-xl font-bold opacity-50 hover:opacity-100 transition-opacity uppercase text-[10px] tracking-widest bg-current/5 hover:bg-current/10"
+                  >
+                    {confirmModal.cancelText || t["confirm.cancel"]}
+                  </button>
+                  <button 
+                    onClick={confirmModal.onConfirm}
+                    className={`flex-1 py-4 text-bg-sanc rounded-xl font-bold hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all text-[10px] tracking-widest uppercase ${
+                      confirmModal.isDestructive ? 'bg-red-800/90' : 'bg-accent-sanc'
+                    }`}
+                  >
+                    {confirmModal.confirmText || 'Confirm'}
+                  </button>
+                </div>
+              </div>
             </motion.div>
           </div>
         )}

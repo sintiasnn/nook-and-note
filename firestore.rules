@@ -8,7 +8,7 @@ service cloud.firestore {
     function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
     function incoming() { return request.resource.data; }
     function existing() { return resource.data; }
-    function isSignedIn() { return request.auth != null && request.auth.token.email_verified == true; }
+    function isSignedIn() { return request.auth != null; }
     
     function isValidBook(data) {
       return data.keys().hasAll(['title', 'author', 'userId', 'addedAt']) &&
@@ -18,7 +18,7 @@ service cloud.firestore {
         data.userId == request.auth.uid &&
         data.addedAt is number &&
         (data.keys().hasAll(['genre']) ? (data.genre is string && data.genre.size() <= 100) : true) &&
-        (data.keys().hasAll(['coverUrl']) ? (data.coverUrl is string && data.coverUrl.size() <= 1000) : true) &&
+        (data.keys().hasAll(['coverUrl']) ? (data.coverUrl is string && data.coverUrl.size() <= 2000) : true) &&
         (data.keys().hasAll(['status']) ? (data.status is string && data.status in ['reading', 'finished', 'unread']) : true) &&
         (data.keys().hasAll(['rating']) ? (data.rating is number && data.rating >= 1 && data.rating <= 5) : true);
     }
@@ -58,7 +58,8 @@ service cloud.firestore {
           isValidReflection(incoming());
           
         allow update: if false; // immutable
-        allow delete: if false;
+        allow delete: if isSignedIn() && isValidId(reflectionId) &&
+          get(/databases/$(database)/documents/books/$(bookId)).data.userId == request.auth.uid;
       }
     }
   }

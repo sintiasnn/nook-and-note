@@ -5,18 +5,25 @@
   --font-sans: "Montserrat", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Lora", ui-serif, Georgia, serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
-
-  /* Sanctuary Theme Mapping */
-  --color-bg-sanc: var(--bg-sanctuary);
-  --color-text-sanc: var(--text-sanctuary);
-  --color-border-sanc: var(--border-sanctuary);
-  --color-accent-sanc: var(--accent-sanctuary);
-
+  
   /* Raw Colors for utility usage */
   --color-cotton-50: #fdfcf0;
   --color-indigo-950: #0f172a;
   --color-sepia-50: #f4ecd8;
   --color-sepia-900: #433422;
+
+}
+
+@layer utilities {
+  .bg-bg-sanc { background-color: var(--bg-sanctuary); }
+  .bg-bg-sanc\/90 { background-color: color-mix(in srgb, var(--bg-sanctuary) 90%, transparent); }
+  .text-bg-sanc { color: var(--bg-sanctuary); }
+  .text-text-sanc { color: var(--text-sanctuary); }
+  .border-border-sanc { border-color: var(--border-sanctuary); }
+  .bg-accent-sanc { background-color: var(--accent-sanctuary); }
+  .bg-accent-sanc\/5 { background-color: color-mix(in srgb, var(--accent-sanctuary) 5%, transparent); }
+  .text-accent-sanc { color: var(--accent-sanctuary); }
+  .accent-sanc { accent-color: var(--accent-sanctuary); }
 }
 
 @layer base {
