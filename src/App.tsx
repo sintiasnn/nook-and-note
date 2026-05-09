@@ -30,6 +30,14 @@ const translations = {
   id: {
     "login.loading": "Menyeduh keheningan...",
     "login.welcome": "\"Selamat datang kembali di tempat teduhmu.\"",
+    "login.about.title": "Ruang Tenang untuk Pikiranmu",
+    "login.about.desc": "Nook & Note bukan sekadar aplikasi membaca, melainkan suaka digital bagi pikiranmu; tempat di mana buku bukan hanya target untuk diselesaikan, melainkan teman untuk berbincang.",
+    "login.feature.1": "Perpustakaan Pribadi",
+    "login.feature.1.desc": "Susun koleksi bacaanmu dengan ritme milikmu sendiri.",
+    "login.feature.2": "Jurnal Refleksi",
+    "login.feature.2.desc": "Tuliskan percikan pemikiran di antara setiap halaman.",
+    "login.feature.3": "Jejak Perjalanan",
+    "login.feature.3.desc": "Rekam kapan dan bagaimana sebuah buku mengubahmu.",
     "login.button": "Masuk dengan Google",
     "theme.light": "Kapas Lembut",
     "theme.sepia": "Kertas Tua",
@@ -84,6 +92,14 @@ const translations = {
   en: {
     "login.loading": "Brewing silence...",
     "login.welcome": "\"Welcome back to your shady retreat.\"",
+    "login.about.title": "A Quiet Room for Your Mind",
+    "login.about.desc": "Nook & Note is not just a reading app, but a digital sanctuary for your mind; a place where books are not just lists to finish, but conversational companions.",
+    "login.feature.1": "Personal Library",
+    "login.feature.1.desc": "Curate your reading collection at your own pace.",
+    "login.feature.2": "Reflection Journal",
+    "login.feature.2.desc": "Scribble the sparks of thoughts between the pages.",
+    "login.feature.3": "Journey Trace",
+    "login.feature.3.desc": "Record when and how a book changes you.",
     "login.button": "Sign in with Google",
     "theme.light": "Soft Cotton",
     "theme.sepia": "Old Paper",
@@ -421,54 +437,86 @@ export default function App() {
           className={`min-h-screen flex items-center justify-center p-6 theme-${theme} relative`}
         >
           <div className="absolute top-8 right-8 flex items-center gap-2 p-1.5 rounded-full border border-current opacity-40 hover:opacity-80 transition-opacity text-xs font-bold uppercase overflow-hidden">
-            <button onClick={() => setLang('id')} className={`px-2 py-1 rounded-full ${lang === 'id' ? 'bg-current text-bg-sanc' : ''}`}>ID</button>
-            <button onClick={() => setLang('en')} className={`px-2 py-1 rounded-full ${lang === 'en' ? 'bg-current text-bg-sanc' : ''}`}>EN</button>
+            <button onClick={() => setLang('id')} className={`px-2 py-1 rounded-full ${lang === 'id' ? 'bg-text-sanc text-bg-sanc' : ''}`}>ID</button>
+            <button onClick={() => setLang('en')} className={`px-2 py-1 rounded-full ${lang === 'en' ? 'bg-text-sanc text-bg-sanc' : ''}`}>EN</button>
           </div>
-          <div className="max-w-md w-full text-center space-y-12">
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              <BookOpen className="w-12 h-12 mx-auto mb-6 opacity-20" />
-              <h1 className="font-serif text-5xl italic font-medium mb-4 tracking-tight">Nook & Note</h1>
-              <p className="font-serif italic opacity-40 text-lg">{t["login.welcome"]}</p>
-            </motion.div>
-
-            <motion.div 
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="space-y-6"
-            >
-              <button 
-                onClick={handleLogin}
-                className="group flex flex-col items-center gap-3 mx-auto px-10 py-4 opacity-40 hover:opacity-100 transition-all border border-transparent hover:border-current/10 rounded-[2rem]"
+          <div className="max-w-4xl w-full flex flex-col md:flex-row gap-16 items-center md:items-start text-center md:text-left">
+            <div className="flex-1 space-y-12">
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
               >
-                <div className="flex items-center gap-3">
-                  <span className="font-sans text-[10px] font-bold uppercase tracking-[0.4em]">{t["login.button"]}</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
-                </div>
-              </button>
-            </motion.div>
+                <BookOpen className="w-12 h-12 mb-6 opacity-20 mx-auto md:mx-0" />
+                <h1 className="font-serif text-5xl italic font-medium mb-4 tracking-tight">Nook & Note</h1>
+                <p className="font-serif italic opacity-40 text-lg">{t["login.welcome"]}</p>
+              </motion.div>
 
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.8 }}
-              className="flex justify-center gap-4 pt-12"
-            >
-              {themesData.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => setTheme(t.id)}
-                  className={`p-2 rounded-full border border-current/10 ${theme === t.id ? 'bg-current opacity-100' : 'opacity-20 hover:opacity-40'}`}
+              <motion.div 
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className="space-y-6"
+              >
+                <button 
+                  onClick={handleLogin}
+                  className="group flex flex-col items-center md:items-start gap-3 px-10 py-4 opacity-40 hover:opacity-100 transition-all border border-transparent hover:border-current/10 rounded-[2rem] mx-auto md:mx-0"
                 >
-                  <div className={theme === t.id ? 'mix-blend-difference' : ''}>
-                    <t.icon className="w-3 h-3" />
+                  <div className="flex items-center gap-3">
+                    <span className="font-sans text-[10px] font-bold uppercase tracking-[0.4em]">{t["login.button"]}</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
                   </div>
                 </button>
-              ))}
+              </motion.div>
+
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8 }}
+                className="flex justify-center md:justify-start gap-4 pt-4"
+              >
+                {themesData.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setTheme(t.id)}
+                    className={`p-2 rounded-full border border-current/10 ${theme === t.id ? 'bg-current opacity-100' : 'opacity-20 hover:opacity-40'}`}
+                  >
+                    <div className={theme === t.id ? 'mix-blend-difference text-bg-sanc' : ''}>
+                      <t.icon className="w-3 h-3" />
+                    </div>
+                  </button>
+                ))}
+              </motion.div>
+            </div>
+
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.6 }}
+              className="flex-[1.2] space-y-10 border-t md:border-t-0 md:border-l border-current/10 pt-16 md:pt-0 md:pl-16 relative w-full"
+            >
+              <div className="space-y-4 text-left">
+                <h2 className="font-serif text-2xl italic font-medium">{t["login.about.title"]}</h2>
+                <p className="text-sm opacity-60 leading-relaxed font-serif">
+                  {t["login.about.desc"]}
+                </p>
+              </div>
+
+              <div className="space-y-8 text-left">
+                {[
+                  { title: t["login.feature.1"], desc: t["login.feature.1.desc"], icon: <Book className="w-5 h-5 opacity-40 mt-1" /> },
+                  { title: t["login.feature.2"], desc: t["login.feature.2.desc"], icon: <PenTool className="w-5 h-5 opacity-40 mt-1" /> },
+                  { title: t["login.feature.3"], desc: t["login.feature.3.desc"], icon: <Quote className="w-5 h-5 opacity-40 mt-1" /> }
+                ].map((feat, idx) => (
+                  <div key={idx} className="flex gap-5 items-start">
+                    <div>{feat.icon}</div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-sm tracking-wide mb-1 uppercase opacity-80">{feat.title}</h3>
+                      <p className="text-xs opacity-50 leading-relaxed font-serif">{feat.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </motion.div>
           </div>
         </motion.div>
@@ -512,8 +560,8 @@ export default function App() {
           
           <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
             <div className="flex items-center gap-2 p-1.5 rounded-full border border-current opacity-20 text-xs font-bold uppercase overflow-hidden shrink-0">
-              <button onClick={() => setLang('id')} className={`px-2 py-1 rounded-full ${lang === 'id' ? 'bg-current text-bg-sanc' : ''}`}>ID</button>
-              <button onClick={() => setLang('en')} className={`px-2 py-1 rounded-full ${lang === 'en' ? 'bg-current text-bg-sanc' : ''}`}>EN</button>
+              <button onClick={() => setLang('id')} className={`px-2 py-1 rounded-full ${lang === 'id' ? 'bg-text-sanc text-bg-sanc' : ''}`}>ID</button>
+              <button onClick={() => setLang('en')} className={`px-2 py-1 rounded-full ${lang === 'en' ? 'bg-text-sanc text-bg-sanc' : ''}`}>EN</button>
             </div>
             <div className="flex items-center gap-1.5 p-1.5 rounded-full border border-current opacity-20 shrink-0">
               {themesData.map((themeData) => (
@@ -557,9 +605,10 @@ export default function App() {
                 onClick={() => setFilterStatus(status)}
                 className={`px-5 py-2 rounded-full border transition-all text-xs font-bold uppercase tracking-widest ${
                   filterStatus === status 
-                    ? 'border-current bg-current text-bg-sanc' 
+                    ? 'border-current bg-current' 
                     : 'border-current/20 hover:border-current/50 opacity-50 hover:opacity-100'
                 }`}
+                style={filterStatus === status ? { color: 'var(--bg-sanctuary)' } : {}}
               >
                 {status === 'all' ? t["filter.all"] : status === 'unread' ? t["filter.unread"] : status === 'reading' ? t["filter.reading"] : t["filter.finished"]}
               </button>
