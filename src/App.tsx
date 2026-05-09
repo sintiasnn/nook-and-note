@@ -1,13 +1,16 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Book, PenTool, Moon, Sun, Coffee, BookOpen, Plus, Trash2, X, Quote, Edit3, Heart, ArrowRight } from 'lucide-react';
+import { Book, PenTool, Moon, Sun, Coffee, BookOpen, Plus, Trash2, X, Quote, Edit3, Heart, ArrowRight, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { auth, db } from './lib/firebase';
+import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, User } from 'firebase/auth';
+import { collection, query, where, onSnapshot, addDoc, updateDoc, doc, deleteDoc, orderBy, serverTimestamp, getDocs } from 'firebase/firestore';
 
 type Theme = 'light' | 'dark' | 'sepia';
 
 interface IReflection {
   id: string;
   content: string;
-  timestamp: string;
+  timestamp: number;
 }
 
 interface IBook {
@@ -15,7 +18,9 @@ interface IBook {
   title: string;
   author: string;
   genre: string;
-  reflections: IReflection[];
+  userId: string;
+  addedAt: number;
+  reflections?: IReflection[];
 }
 
 const AFFIRMATIONS = [
@@ -29,6 +34,8 @@ const AFFIRMATIONS = [
 ];
 
 export default function App() {
+  const [user, setUser] = useState<User | null>(null);
+  const [loadingAuth, setLoadingAuth] = useState(true);
   const [theme, setTheme] = useState<Theme>('sepia');
   const [books, setBooks] = useState<IBook[]>([]);
   const [showAddBook, setShowAddBook] = useState(false);
@@ -41,39 +48,94 @@ export default function App() {
     return AFFIRMATIONS[Math.floor(Math.random() * AFFIRMATIONS.length)];
   }, []);
 
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (err) {
+      console.error('Login failed', err);
+    }
+  };
+
+  const handleLogout = () => {
+    signOut(auth);
+  };
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      setLoadingAuth(false);
+    });
+    return () => unsub();
+  }, []);
+
   useEffect(() => {
     document.body.className = `theme-${theme}`;
   }, [theme]);
 
   useEffect(() => {
-    fetchBooks();
-  }, []);
-
-  const fetchBooks = async () => {
-    try {
-      const res = await fetch('/api/books');
-      setBooks(await res.json());
-    } catch (err) {
-      console.error('Failed to fetch books', err);
+    if (!user) {
+      setBooks([]);
+      return;
     }
-  };
+    
+    // Listen to books
+    const q = query(collection(db, 'books'), where('userId', '==', user.uid));
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
+      const booksData: IBook[] = [];
+      for (const docSnap of snapshot.docs) {
+        const bookData = { id: docSnap.id, ...docSnap.data() } as IBook;
+        
+        // Fetch reflections for this book
+        const refQ = query(collection(db, `books/${docSnap.id}/reflections`), orderBy('timestamp', 'asc'));
+        const refSnapshot = await getDocs(refQ);
+        const reflections = refSnapshot.docs.map(refDoc => ({
+          id: refDoc.id,
+          ...refDoc.data()
+        })) as IReflection[];
+        
+        bookData.reflections = reflections;
+        booksData.push(bookData);
+      }
+      
+      // Sort in memory by addedAt to keep simple indices
+      booksData.sort((a, b) => b.addedAt - a.addedAt);
+      setBooks(booksData);
+      
+      // Update journalBook if it's currently open
+      if (journalBook) {
+        const updatedJournal = booksData.find(b => b.id === journalBook.id);
+        if (updatedJournal) setJournalBook(updatedJournal);
+      }
+    }, (error) => {
+      console.error('Firestore Error: ', error);
+    });
+
+    return () => unsubscribe();
+  }, [user]); // We keep this simple for now, though journalBook changes shouldn't re-trigger snapshot listening.
 
   const handleSaveBook = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newBook.title) return;
+    if (!newBook.title || !user) return;
     
     try {
-      const url = editingBook ? `/api/books/${editingBook.id}` : '/api/books';
-      const method = editingBook ? 'PUT' : 'POST';
+      if (editingBook) {
+        await updateDoc(doc(db, 'books', editingBook.id), {
+          title: newBook.title,
+          author: newBook.author,
+          genre: newBook.genre,
+        });
+      } else {
+        await addDoc(collection(db, 'books'), {
+          title: newBook.title,
+          author: newBook.author || 'Anonim',
+          genre: newBook.genre,
+          userId: user.uid,
+          addedAt: Date.now(),
+        });
+      }
       
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newBook),
-      });
-      
-      await res.json();
-      await fetchBooks();
       setNewBook({ title: '', author: '', genre: '' });
       setShowAddBook(false);
       setEditingBook(null);
@@ -83,24 +145,12 @@ export default function App() {
   };
 
   const handleAddReflection = async () => {
-    if (!newReflection.trim() || !journalBook) return;
+    if (!newReflection.trim() || !journalBook || !user) return;
     try {
-      const res = await fetch(`/api/books/${journalBook.id}/reflections`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: newReflection }),
+      await addDoc(collection(db, `books/${journalBook.id}/reflections`), {
+        content: newReflection,
+        timestamp: Date.now()
       });
-      const saved = await res.json();
-      
-      // Update local state for current journal view
-      const updatedBooks = books.map(b => {
-        if (b.id === journalBook.id) {
-          return { ...b, reflections: [...(b.reflections || []), saved] };
-        }
-        return b;
-      });
-      setBooks(updatedBooks);
-      setJournalBook(updatedBooks.find(b => b.id === journalBook.id) || null);
       setNewReflection('');
     } catch (err) {
       console.error('Failed to add reflection', err);
@@ -110,18 +160,82 @@ export default function App() {
   const handleDeleteBook = async (id: string) => {
     if (!confirm('Apakah koleksi ini benar-benar harus pergi?')) return;
     try {
-      await fetch(`/api/books/${id}`, { method: 'DELETE' });
-      setBooks(books.filter(b => b.id !== id));
+      await deleteDoc(doc(db, 'books', id));
     } catch (err) {
       console.error('Failed to delete book', err);
     }
   };
 
-  const themes: { id: Theme; icon: any; label: string }[] = [
+  const themesData: { id: Theme; icon: any; label: string }[] = [
     { id: 'light', icon: Sun, label: 'Kapas Lembut' },
     { id: 'sepia', icon: Coffee, label: 'Kertas Tua' },
     { id: 'dark', icon: Moon, label: 'Malam Indigo' },
   ];
+
+  if (loadingAuth) {
+    return <div className={`min-h-screen flex items-center justify-center p-6 theme-${theme}`}><p className="italic font-serif opacity-50">Menyeduh keheningan...</p></div>;
+  }
+
+  if (!user) {
+    return (
+      <AnimatePresence mode="wait">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className={`min-h-screen flex items-center justify-center p-6 theme-${theme}`}
+        >
+          <div className="max-w-md w-full text-center space-y-12">
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              <BookOpen className="w-12 h-12 mx-auto mb-6 opacity-20" />
+              <h1 className="font-serif text-5xl italic font-medium mb-4 tracking-tight">Nook & Note</h1>
+              <p className="font-serif italic opacity-40 text-lg">"Selamat datang kembali di tempat teduhmu."</p>
+            </motion.div>
+
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="space-y-6"
+            >
+              <button 
+                onClick={handleLogin}
+                className="group flex flex-col items-center gap-3 mx-auto px-10 py-4 opacity-40 hover:opacity-100 transition-all border border-transparent hover:border-current/10 rounded-[2rem]"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="font-sans text-[10px] font-bold uppercase tracking-[0.4em]">Masuk dengan Google</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
+                </div>
+              </button>
+            </motion.div>
+
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8 }}
+              className="flex justify-center gap-4 pt-12"
+            >
+              {themesData.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setTheme(t.id)}
+                  className={`p-2 rounded-full border border-current/10 ${theme === t.id ? 'bg-current opacity-100' : 'opacity-20 hover:opacity-40'}`}
+                >
+                  <div className={theme === t.id ? 'mix-blend-difference' : ''}>
+                    <t.icon className="w-3 h-3" />
+                  </div>
+                </button>
+              ))}
+            </motion.div>
+          </div>
+        </motion.div>
+      </AnimatePresence>
+    );
+  }
 
   return (
     <AnimatePresence mode="popLayout">
@@ -138,7 +252,7 @@ export default function App() {
         <div>
           <div className="flex items-center gap-3 mb-4">
             <BookOpen className="w-8 h-8 opacity-40" />
-            <h1 className="text-4xl font-serif italic italic font-medium tracking-tight">Nook & Note</h1>
+            <h1 className="text-4xl font-serif italic font-medium tracking-tight">Nook & Note</h1>
           </div>
           <motion.p 
             initial={{ opacity: 0 }}
@@ -149,33 +263,42 @@ export default function App() {
           </motion.p>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5 p-1.5 rounded-full border border-current opacity-20">
-            {themes.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setTheme(t.id)}
-                className={`p-2 rounded-full transition-all ${
-                  theme === t.id ? 'bg-current shadow-sm scale-110' : 'hover:scale-110'
-                }`}
-              >
-                <div className={theme === t.id ? 'mix-blend-difference' : ''}>
-                  <t.icon className="w-4 h-4" />
-                </div>
-              </button>
-            ))}
+        <div className="flex flex-col items-end gap-6">
+          <div className="flex items-center gap-4">
+            <p className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold">{user.displayName || user.email}</p>
+            <button onClick={handleLogout} className="p-2 opacity-30 hover:opacity-100 transition-opacity" title="Keluar">
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
-          <button 
-            onClick={() => {
-              setEditingBook(null);
-              setNewBook({ title: '', author: '', genre: '' });
-              setShowAddBook(true);
-            }}
-            className="px-8 py-4 bg-accent-sanc text-bg-sanc rounded-full hover:shadow-2xl transition-all flex items-center gap-3 group"
-          >
-            <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
-            <span className="font-medium">Ritual Baru</span>
-          </button>
+          
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5 p-1.5 rounded-full border border-current opacity-20">
+              {themesData.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setTheme(t.id)}
+                  className={`p-2 rounded-full transition-all ${
+                    theme === t.id ? 'bg-current shadow-sm scale-110' : 'hover:scale-110'
+                  }`}
+                >
+                  <div className={theme === t.id ? 'mix-blend-difference' : ''}>
+                    <t.icon className="w-4 h-4" />
+                  </div>
+                </button>
+              ))}
+            </div>
+            <button 
+              onClick={() => {
+                setEditingBook(null);
+                setNewBook({ title: '', author: '', genre: '' });
+                setShowAddBook(true);
+              }}
+              className="px-8 py-4 bg-accent-sanc text-bg-sanc rounded-full hover:shadow-2xl transition-all flex items-center gap-3 group"
+            >
+              <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
+              <span className="font-medium">Ritual Baru</span>
+            </button>
+          </div>
         </div>
       </header>
 

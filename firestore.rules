@@ -1,0 +1,63 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+    
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isSignedIn() { return request.auth != null && request.auth.token.email_verified == true; }
+    
+    function isValidBook(data) {
+      return data.keys().hasAll(['title', 'author', 'userId', 'addedAt']) &&
+        data.size() <= 6 &&
+        data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+        data.author is string && data.author.size() > 0 && data.author.size() <= 200 &&
+        data.userId == request.auth.uid &&
+        data.addedAt is number &&
+        (data.keys().hasAll(['genre']) ? (data.genre is string && data.genre.size() <= 100) : true) &&
+        (data.keys().hasAll(['coverUrl']) ? (data.coverUrl is string && data.coverUrl.size() <= 1000) : true);
+    }
+
+    match /books/{bookId} {
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+      allow get: if isSignedIn() && isValidId(bookId) && existing().userId == request.auth.uid;
+      
+      allow create: if isSignedIn() && isValidId(bookId) &&
+        isValidBook(incoming());
+        
+      allow update: if isSignedIn() && isValidId(bookId) &&
+        existing().userId == request.auth.uid &&
+        isValidBook(incoming()) &&
+        incoming().userId == existing().userId &&
+        incoming().addedAt == existing().addedAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['title', 'author', 'genre', 'coverUrl']);
+        
+      allow delete: if isSignedIn() && isValidId(bookId) && existing().userId == request.auth.uid;
+
+      function isValidReflection(data) {
+        return data.keys().hasAll(['content', 'timestamp']) &&
+          data.size() == 2 &&
+          data.content is string && data.content.size() > 0 && data.content.size() <= 5000 &&
+          data.timestamp is number;
+      }
+      
+      match /reflections/{reflectionId} {
+        allow list: if isSignedIn() && 
+          get(/databases/$(database)/documents/books/$(bookId)).data.userId == request.auth.uid;
+          
+        allow get: if isSignedIn() && isValidId(reflectionId) &&
+          get(/databases/$(database)/documents/books/$(bookId)).data.userId == request.auth.uid;
+          
+        allow create: if isSignedIn() && isValidId(reflectionId) &&
+          get(/databases/$(database)/documents/books/$(bookId)).data.userId == request.auth.uid &&
+          isValidReflection(incoming());
+          
+        allow update: if false; // immutable
+        allow delete: if false;
+      }
+    }
+  }
+}    

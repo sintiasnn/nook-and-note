@@ -1,0 +1,38 @@
+{
+  "entities": {
+    "Book": {
+      "title": "Book",
+      "description": "A book added by the user",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Title of the book" },
+        "author": { "type": "string", "description": "Author of the book" },
+        "genre": { "type": "string", "description": "Genre of the book" },
+        "coverUrl": { "type": "string", "description": "URL of the cover image" },
+        "addedAt": { "type": "number", "description": "Timestamp when added" },
+        "userId": { "type": "string", "description": "Owner user ID" }
+      },
+      "required": ["title", "author", "userId"]
+    },
+    "Reflection": {
+      "title": "Reflection",
+      "description": "A journal entry or reflection for a book",
+      "type": "object",
+      "properties": {
+        "content": { "type": "string", "description": "The text of the reflection" },
+        "timestamp": { "type": "number", "description": "When the reflection was made" }
+      },
+      "required": ["content", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/books/{bookId}": {
+      "schema": "Book",
+      "description": "User's book library"
+    },
+    "/books/{bookId}/reflections/{reflectionId}": {
+      "schema": "Reflection",
+      "description": "Reflections for a specific book"
+    }
+  }
+}
