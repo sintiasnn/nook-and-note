@@ -291,8 +291,12 @@ export default function App() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className={`min-h-screen flex items-center justify-center p-6 theme-${theme}`}
+          className={`min-h-screen flex items-center justify-center p-6 theme-${theme} relative`}
         >
+          <div className="absolute top-8 right-8 flex items-center gap-2 p-1.5 rounded-full border border-current opacity-40 hover:opacity-80 transition-opacity text-xs font-bold uppercase overflow-hidden">
+            <button onClick={() => setLang('id')} className={`px-2 py-1 rounded-full ${lang === 'id' ? 'bg-current text-bg-sanc' : ''}`}>ID</button>
+            <button onClick={() => setLang('en')} className={`px-2 py-1 rounded-full ${lang === 'en' ? 'bg-current text-bg-sanc' : ''}`}>EN</button>
+          </div>
           <div className="max-w-md w-full text-center space-y-12">
             <motion.div
               initial={{ y: 20, opacity: 0 }}
