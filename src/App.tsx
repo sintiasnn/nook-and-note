@@ -437,8 +437,8 @@ export default function App() {
           className={`min-h-screen flex items-center justify-center p-6 theme-${theme} relative`}
         >
           <div className="absolute top-8 right-8 flex items-center gap-2 p-1.5 rounded-full border border-current opacity-40 hover:opacity-80 transition-opacity text-xs font-bold uppercase overflow-hidden">
-            <button onClick={() => setLang('id')} className={`px-2 py-1 rounded-full ${lang === 'id' ? 'bg-text-sanc text-bg-sanc' : ''}`}>ID</button>
-            <button onClick={() => setLang('en')} className={`px-2 py-1 rounded-full ${lang === 'en' ? 'bg-text-sanc text-bg-sanc' : ''}`}>EN</button>
+            <button onClick={() => setLang('id')} className="px-2 py-1 rounded-full" style={lang === 'id' ? { backgroundColor: 'var(--text-sanctuary)', color: 'var(--bg-sanctuary)' } : {}}>ID</button>
+            <button onClick={() => setLang('en')} className="px-2 py-1 rounded-full" style={lang === 'en' ? { backgroundColor: 'var(--text-sanctuary)', color: 'var(--bg-sanctuary)' } : {}}>EN</button>
           </div>
           <div className="max-w-4xl w-full flex flex-col md:flex-row gap-16 items-center md:items-start text-center md:text-left">
             <div className="flex-1 space-y-12">
@@ -560,8 +560,8 @@ export default function App() {
           
           <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
             <div className="flex items-center gap-2 p-1.5 rounded-full border border-current opacity-20 text-xs font-bold uppercase overflow-hidden shrink-0">
-              <button onClick={() => setLang('id')} className={`px-2 py-1 rounded-full ${lang === 'id' ? 'bg-text-sanc text-bg-sanc' : ''}`}>ID</button>
-              <button onClick={() => setLang('en')} className={`px-2 py-1 rounded-full ${lang === 'en' ? 'bg-text-sanc text-bg-sanc' : ''}`}>EN</button>
+              <button onClick={() => setLang('id')} className="px-2 py-1 rounded-full" style={lang === 'id' ? { backgroundColor: 'var(--text-sanctuary)', color: 'var(--bg-sanctuary)' } : {}}>ID</button>
+              <button onClick={() => setLang('en')} className="px-2 py-1 rounded-full" style={lang === 'en' ? { backgroundColor: 'var(--text-sanctuary)', color: 'var(--bg-sanctuary)' } : {}}>EN</button>
             </div>
             <div className="flex items-center gap-1.5 p-1.5 rounded-full border border-current opacity-20 shrink-0">
               {themesData.map((themeData) => (
@@ -605,10 +605,14 @@ export default function App() {
                 onClick={() => setFilterStatus(status)}
                 className={`px-5 py-2 rounded-full border transition-all text-xs font-bold uppercase tracking-widest ${
                   filterStatus === status 
-                    ? 'border-current bg-current' 
+                    ? 'opacity-100' 
                     : 'border-current/20 hover:border-current/50 opacity-50 hover:opacity-100'
                 }`}
-                style={filterStatus === status ? { color: 'var(--bg-sanctuary)' } : {}}
+                style={filterStatus === status ? { 
+                  backgroundColor: 'var(--text-sanctuary)', 
+                  color: 'var(--bg-sanctuary)', 
+                  borderColor: 'var(--text-sanctuary)' 
+                } : {}}
               >
                 {status === 'all' ? t["filter.all"] : status === 'unread' ? t["filter.unread"] : status === 'reading' ? t["filter.reading"] : t["filter.finished"]}
               </button>

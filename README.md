@@ -1,26 +1,33 @@
-# 📚 Nook & Note: A Digital Sanctuary for the Mindful Reader
+# Nook & Note: A Digital Sanctuary for the Mindful Reader
+
+![React](https://img.shields.io/badge/React-19-blue?logo=react)
+![Tailwind](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss)
+![Firebase](https://img.shields.io/badge/Firebase-12-FFC400?logo=firebase)
+![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite)
+
+[Live App](https://nook-note-763519437512.asia-southeast1.run.app)
 
 Build a lightweight, serene web application to track books and save reflective notes/quotes. The goal is to create a digital space that feels as calm as a private library on a cold, rainy afternoon—free from the pressure of reading statistics, gamification, or social pressure.
 
 ---
 
-## 📖 Table of Contents
-- [Overview](#-overview)
-- [Project Structure](#-project-structure)
-- [Key Features](#-key-features)
-- [Tech Stack](#-tech-stack)
-- [Getting Started](#-getting-started)
-- [License](#-license)
-- [Author](#-author)
+## Table of Contents
+- [Overview](#overview)
+- [Project Structure](#project-structure)
+- [Key Features](#key-features)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+- [License](#license)
+- [Author](#author)
 
 ---
 
-## 🌟 Overview
+## Overview
 **Nook & Note** is designed for those who find peace in the pages of a book. Unlike modern tracking apps focused on "goals" and "streaks," Nook & Note focuses on the *feeling* of reading. It provides a distraction-free environment to archive your library and capture the echoes of your thoughts.
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 ```text
 nook-and-note/
 ├── data/                   # Sanctuary Archives (JSON storage)
@@ -37,7 +44,7 @@ nook-and-note/
 
 ---
 
-## ✨ Key Features
+## Key Features
 
 ### 1. Three Aesthetic Themes
 Smooth, poetic transitions between curated environments:
@@ -62,7 +69,7 @@ Refine and update book information through a serene and intuitive interface.
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 - **Frontend**: React 18, Vite, Tailwind CSS, Framer Motion (motion/react).
 - **Backend**: Node.js with Express.js.
 - **Storage**: Local JSON (data/books.json) for simplicity and privacy.
@@ -72,7 +79,7 @@ Refine and update book information through a serene and intuitive interface.
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Node.js (v18 or later)
@@ -105,12 +112,12 @@ Open your browser and navigate to `http://localhost:3000`.
 
 ---
 
-## 📜 License
+## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## ✍️ Author
+## Author
 **Ni Putu Sintia Wati**
 - GitHub: [@sintiasnn](https://github.com/sintiasnn)
 - Project: [Nook & Note](https://github.com/sintiasnn/nook-and-note)
