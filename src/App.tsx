@@ -26,20 +26,117 @@ interface IBook {
   reflections?: IReflection[];
 }
 
-const AFFIRMATIONS = [
-  "Buku adalah saku yang penuh dengan mimpi.",
-  "Membaca memberi kita tempat untuk pergi ketika kita harus tetap di tempat kita berada.",
-  "Sebuah perpustakaan adalah tempat di mana sejarah datang untuk beristirahat.",
-  "Kata-kata memiliki kekuatan untuk menyembuhkan jiwa yang lelah.",
-  "Di antara dua sampul, ada dunia yang menanti untuk ditemukan.",
-  "Membaca adalah meditasi tanpa perlu menutup mata.",
-  "Setiap buku adalah petualangan baru yang tenang."
-];
+const translations = {
+  id: {
+    "login.loading": "Menyeduh keheningan...",
+    "login.welcome": "\"Selamat datang kembali di tempat teduhmu.\"",
+    "login.button": "Masuk dengan Google",
+    "theme.light": "Kapas Lembut",
+    "theme.sepia": "Kertas Tua",
+    "theme.dark": "Malam Indigo",
+    "header.ritual": "Ritual Baru",
+    "filter.all": "Semua",
+    "filter.unread": "Belum Dibaca",
+    "filter.reading": "Sedang Dibaca",
+    "filter.finished": "Selesai",
+    "book.genre.default": "Sastra",
+    "book.tooltip.journal": "Buka Jurnal",
+    "book.tooltip.edit": "Ubah Volume",
+    "book.tooltip.delete": "Hapus",
+    "empty.title": "Rak masih hening...",
+    "empty.subtitle": "Biarkan sebuah cerita masuk.",
+    "journal.placeholder": "Goreskan pemikiran yang bersemi di benakmu...",
+    "journal.time": "Waktu Keheningan:",
+    "journal.save": "Abadikan Refleksi",
+    "journal.history": "Goresan Terdahulu",
+    "journal.empty": "Halaman ini masih menunggu gema pikiranmu.",
+    "modal.add.title": "Ritual Volume Baru",
+    "modal.edit.title": "Penyempurnaan Volume",
+    "modal.book.title": "Gelar / Nama Karya",
+    "modal.book.title.placeholder": "Judul yang bergaung...",
+    "modal.book.author": "Sang Pujangga",
+    "modal.book.author.placeholder": "Penulis...",
+    "modal.book.genre": "Aliran / Genre",
+    "modal.book.genre.placeholder": "Sastra...",
+    "modal.book.cover": "Sampul Buku (URL)",
+    "modal.book.status": "Status",
+    "modal.book.rating": "Penilaian",
+    "modal.button.cancel": "Batalkan",
+    "modal.button.save": "Simpan ke Rak",
+    "modal.button.update": "Sempurnakan",
+    "footer": "— Terkurasi dalam Keheningan —",
+    "auth.logout": "Keluar",
+    "confirm.delete": "Apakah koleksi ini benar-benar harus pergi?",
+    "affirmations": [
+      "Buku adalah saku yang penuh dengan mimpi.",
+      "Membaca memberi kita tempat untuk pergi ketika kita harus tetap di tempat kita berada.",
+      "Sebuah perpustakaan adalah tempat di mana sejarah datang untuk beristirahat.",
+      "Kata-kata memiliki kekuatan untuk menyembuhkan jiwa yang lelah.",
+      "Di antara dua sampul, ada dunia yang menanti untuk ditemukan.",
+      "Membaca adalah meditasi tanpa perlu menutup mata.",
+      "Setiap buku adalah petualangan baru yang tenang."
+    ]
+  },
+  en: {
+    "login.loading": "Brewing silence...",
+    "login.welcome": "\"Welcome back to your shady retreat.\"",
+    "login.button": "Sign in with Google",
+    "theme.light": "Soft Cotton",
+    "theme.sepia": "Old Paper",
+    "theme.dark": "Indigo Night",
+    "header.ritual": "New Ritual",
+    "filter.all": "All",
+    "filter.unread": "Unread",
+    "filter.reading": "Reading",
+    "filter.finished": "Finished",
+    "book.genre.default": "Literature",
+    "book.tooltip.journal": "Open Journal",
+    "book.tooltip.edit": "Edit Volume",
+    "book.tooltip.delete": "Delete",
+    "empty.title": "The shelf is still silent...",
+    "empty.subtitle": "Let a story enter.",
+    "journal.placeholder": "Write down the thoughts blooming in your mind...",
+    "journal.time": "Time of Silence:",
+    "journal.save": "Capture Reflection",
+    "journal.history": "Past Strokes",
+    "journal.empty": "This page is still waiting for the echo of your thoughts.",
+    "modal.add.title": "New Volume Ritual",
+    "modal.edit.title": "Volume Refinement",
+    "modal.book.title": "Title / Name of Work",
+    "modal.book.title.placeholder": "A resonant title...",
+    "modal.book.author": "The Poet",
+    "modal.book.author.placeholder": "Author...",
+    "modal.book.genre": "Flow / Genre",
+    "modal.book.genre.placeholder": "Literature...",
+    "modal.book.cover": "Book Cover (URL)",
+    "modal.book.status": "Status",
+    "modal.book.rating": "Rating",
+    "modal.button.cancel": "Cancel",
+    "modal.button.save": "Save to Shelf",
+    "modal.button.update": "Refine",
+    "footer": "— Curated in Silence —",
+    "auth.logout": "Sign out",
+    "confirm.delete": "Should this collection really leave?",
+    "affirmations": [
+      "A book is a pocket full of dreams.",
+      "Reading gives us someplace to go when we have to stay where we are.",
+      "A library is a place where history comes to rest.",
+      "Words have the power to heal a weary soul.",
+      "Between two covers, there is a world waiting to be discovered.",
+      "Reading is meditation without the need to close your eyes.",
+      "Every book is a quiet new adventure."
+    ]
+  }
+};
+
+type Language = 'id' | 'en';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
   const [theme, setTheme] = useState<Theme>('sepia');
+  const [lang, setLang] = useState<Language>('id');
+  const t = translations[lang];
   const [books, setBooks] = useState<IBook[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [showAddBook, setShowAddBook] = useState(false);
@@ -51,16 +148,18 @@ export default function App() {
   const [newReflection, setNewReflection] = useState('');
   
   const affirmation = useMemo(() => {
-    return AFFIRMATIONS[Math.floor(Math.random() * AFFIRMATIONS.length)];
-  }, []);
+    const list = t.affirmations;
+    return list[Math.floor(Math.random() * list.length)];
+  }, [lang]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Login failed', err);
+      alert('Login error: ' + err.message);
     }
   };
 
@@ -167,7 +266,7 @@ export default function App() {
   };
 
   const handleDeleteBook = async (id: string) => {
-    if (!confirm('Apakah koleksi ini benar-benar harus pergi?')) return;
+    if (!confirm(t["confirm.delete"])) return;
     try {
       await deleteDoc(doc(db, 'books', id));
     } catch (err) {
@@ -175,14 +274,14 @@ export default function App() {
     }
   };
 
-  const themesData: { id: Theme; icon: any; label: string }[] = [
-    { id: 'light', icon: Sun, label: 'Kapas Lembut' },
-    { id: 'sepia', icon: Coffee, label: 'Kertas Tua' },
-    { id: 'dark', icon: Moon, label: 'Malam Indigo' },
+  const themesData: { id: Theme; icon: any; label: string; textKey: keyof typeof translations['id'] }[] = [
+    { id: 'light', icon: Sun, label: 'Kapas Lembut', textKey: 'theme.light' },
+    { id: 'sepia', icon: Coffee, label: 'Kertas Tua', textKey: 'theme.sepia' },
+    { id: 'dark', icon: Moon, label: 'Malam Indigo', textKey: 'theme.dark' },
   ];
 
   if (loadingAuth) {
-    return <div className={`min-h-screen flex items-center justify-center p-6 theme-${theme}`}><p className="italic font-serif opacity-50">Menyeduh keheningan...</p></div>;
+    return <div className={`min-h-screen flex items-center justify-center p-6 theme-${theme}`}><p className="italic font-serif opacity-50">{t["login.loading"]}</p></div>;
   }
 
   if (!user) {
@@ -202,7 +301,7 @@ export default function App() {
             >
               <BookOpen className="w-12 h-12 mx-auto mb-6 opacity-20" />
               <h1 className="font-serif text-5xl italic font-medium mb-4 tracking-tight">Nook & Note</h1>
-              <p className="font-serif italic opacity-40 text-lg">"Selamat datang kembali di tempat teduhmu."</p>
+              <p className="font-serif italic opacity-40 text-lg">{t["login.welcome"]}</p>
             </motion.div>
 
             <motion.div 
@@ -216,7 +315,7 @@ export default function App() {
                 className="group flex flex-col items-center gap-3 mx-auto px-10 py-4 opacity-40 hover:opacity-100 transition-all border border-transparent hover:border-current/10 rounded-[2rem]"
               >
                 <div className="flex items-center gap-3">
-                  <span className="font-sans text-[10px] font-bold uppercase tracking-[0.4em]">Masuk dengan Google</span>
+                  <span className="font-sans text-[10px] font-bold uppercase tracking-[0.4em]">{t["login.button"]}</span>
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
                 </div>
               </button>
@@ -275,23 +374,28 @@ export default function App() {
         <div className="flex flex-col items-end gap-6">
           <div className="flex items-center gap-4">
             <p className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold">{user.displayName || user.email}</p>
-            <button onClick={handleLogout} className="p-2 opacity-30 hover:opacity-100 transition-opacity" title="Keluar">
+            <button onClick={handleLogout} className="p-2 opacity-30 hover:opacity-100 transition-opacity" title={t["auth.logout"]}>
               <LogOut className="w-4 h-4" />
             </button>
           </div>
           
           <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 p-1.5 rounded-full border border-current opacity-20 text-xs font-bold uppercase overflow-hidden">
+              <button onClick={() => setLang('id')} className={`px-2 py-1 rounded-full ${lang === 'id' ? 'bg-current text-bg-sanc' : ''}`}>ID</button>
+              <button onClick={() => setLang('en')} className={`px-2 py-1 rounded-full ${lang === 'en' ? 'bg-current text-bg-sanc' : ''}`}>EN</button>
+            </div>
             <div className="flex items-center gap-1.5 p-1.5 rounded-full border border-current opacity-20">
-              {themesData.map((t) => (
+              {themesData.map((themeData) => (
                 <button
-                  key={t.id}
-                  onClick={() => setTheme(t.id)}
+                  key={themeData.id}
+                  onClick={() => setTheme(themeData.id)}
+                  title={t[themeData.textKey]}
                   className={`p-2 rounded-full transition-all ${
-                    theme === t.id ? 'bg-current shadow-sm scale-110' : 'hover:scale-110'
+                    theme === themeData.id ? 'bg-current shadow-sm scale-110' : 'hover:scale-110'
                   }`}
                 >
-                  <div className={theme === t.id ? 'mix-blend-difference' : ''}>
-                    <t.icon className="w-4 h-4" />
+                  <div className={theme === themeData.id ? 'mix-blend-difference' : ''}>
+                    <themeData.icon className="w-4 h-4" />
                   </div>
                 </button>
               ))}
@@ -305,7 +409,7 @@ export default function App() {
               className="px-8 py-4 bg-accent-sanc text-bg-sanc rounded-full hover:shadow-2xl transition-all flex items-center gap-3 group"
             >
               <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
-              <span className="font-medium">Ritual Baru</span>
+              <span className="font-medium">{t["header.ritual"]}</span>
             </button>
           </div>
         </div>
@@ -326,7 +430,7 @@ export default function App() {
                     : 'border-current/20 hover:border-current/50 opacity-50 hover:opacity-100'
                 }`}
               >
-                {status === 'all' ? 'Semua' : status === 'unread' ? 'Belum Dibaca' : status === 'reading' ? 'Sedang Dibaca' : 'Selesai'}
+                {status === 'all' ? t["filter.all"] : status === 'unread' ? t["filter.unread"] : status === 'reading' ? t["filter.reading"] : t["filter.finished"]}
               </button>
             ))}
           </div>
@@ -352,7 +456,7 @@ export default function App() {
               <div className="flex-1 relative z-10">
                 <div className="flex justify-between items-start mb-3">
                   <span className={`text-[10px] uppercase tracking-widest font-bold px-3 py-1 rounded-full ${book.coverUrl ? 'bg-white/10 text-white' : 'bg-current/5'} opacity-80 backdrop-blur-sm`}>
-                    {book.genre || 'Sastra'}
+                    {book.genre || t["book.genre.default"]}
                   </span>
                   
                   {book.rating ? (
@@ -372,7 +476,7 @@ export default function App() {
                 <div className="flex gap-2">
                   <button 
                     onClick={() => setJournalBook(book)}
-                    title="Buka Jurnal"
+                    title={t["book.tooltip.journal"]}
                     className={`p-3 rounded-full transition-colors ${book.coverUrl ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-current/5 hover:bg-current/10'}`}
                   >
                     <PenTool className="w-4 h-4" />
@@ -390,7 +494,7 @@ export default function App() {
                       });
                       setShowAddBook(true);
                     }}
-                    title="Ubah Volume"
+                    title={t["book.tooltip.edit"]}
                     className={`p-3 rounded-full transition-colors ${book.coverUrl ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-current/5 hover:bg-current/10'}`}
                   >
                     <Edit3 className="w-4 h-4" />
@@ -398,7 +502,7 @@ export default function App() {
                 </div>
                 <button 
                   onClick={() => handleDeleteBook(book.id)}
-                  title="Hapus"
+                  title={t["book.tooltip.delete"]}
                   className={`p-3 transition-colors opacity-50 hover:opacity-100 ${book.coverUrl ? 'hover:text-red-400 text-white' : 'hover:text-red-500'}`}
                 >
                   <Trash2 className="w-4 h-4" />
@@ -410,8 +514,8 @@ export default function App() {
           {books.length === 0 && (
             <div className="col-span-full py-40 text-center opacity-20 flex flex-col items-center">
               <Book className="w-20 h-20 mb-8 stroke-1" />
-              <p className="text-2xl font-serif italic mb-2 tracking-wide">Rak masih hening...</p>
-              <p className="text-sm uppercase tracking-widest">Biarkan sebuah cerita masuk.</p>
+              <p className="text-2xl font-serif italic mb-2 tracking-wide">{t["empty.title"]}</p>
+              <p className="text-sm uppercase tracking-widest">{t["empty.subtitle"]}</p>
             </div>
           )}
         </div>
@@ -467,24 +571,24 @@ export default function App() {
                   <textarea 
                     value={newReflection}
                     onChange={(e) => setNewReflection(e.target.value)}
-                    placeholder="Goreskan pemikiran yang bersemi di benakmu..."
+                    placeholder={t["journal.placeholder"]}
                     className="w-full h-48 bg-transparent border-none outline-none resize-none font-serif text-4xl leading-relaxed placeholder:opacity-5 placeholder:italic focus:placeholder:opacity-0 transition-all"
                   />
                   <div className="flex justify-between items-center pt-8 border-t border-current/5">
                     <span className="text-[10px] uppercase tracking-[0.3em] opacity-20 font-bold">
-                      Waktu Keheningan: {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                      {t["journal.time"]} {new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'short' })}
                     </span>
                     <button 
                       onClick={handleAddReflection}
                       className="px-12 py-5 bg-accent-sanc text-bg-sanc rounded-full font-bold shadow-xl hover:-translate-y-1 active:scale-95 transition-all text-sm tracking-wide"
                     >
-                      Abadikan Refleksi
+                      {t["journal.save"]}
                     </button>
                   </div>
                 </section>
 
                 <div className="space-y-12">
-                  <h4 className="text-[10px] uppercase tracking-[0.4em] opacity-20 font-bold border-b border-current/5 pb-6">Goresan Terdahulu</h4>
+                  <h4 className="text-[10px] uppercase tracking-[0.4em] opacity-20 font-bold border-b border-current/5 pb-6">{t["journal.history"]}</h4>
                   
                   <div className="space-y-12">
                     {(journalBook.reflections || []).slice().reverse().map((ref, idx) => (
@@ -499,14 +603,14 @@ export default function App() {
                         <div className="absolute left-[-2px] top-2 w-2 h-2 rounded-full bg-current/20" />
                         <p className="text-3xl font-serif italic leading-relaxed opacity-80">{ref.content}</p>
                         <p className="text-[10px] opacity-30 mt-8 uppercase tracking-[0.2em]">
-                          {new Date(ref.timestamp).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })} • {new Date(ref.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                          {new Date(ref.timestamp).toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })} • {new Date(ref.timestamp).toLocaleTimeString(lang === 'id' ? 'id-ID' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </motion.div>
                     ))}
                     
                     {(!journalBook.reflections || journalBook.reflections.length === 0) && (
                       <div className="text-center py-20 opacity-10 italic font-serif text-2xl">
-                        Halaman ini masih menunggu gema pikiranmu.
+                        {t["journal.empty"]}
                       </div>
                     )}
                   </div>
@@ -544,7 +648,7 @@ export default function App() {
                 transition={{ delay: 0.1 }}
                 className="font-serif text-4xl mb-12 italic tracking-tight"
               >
-                {editingBook ? 'Volume Refinement' : 'New Volume Ritual'}
+                {editingBook ? t["modal.edit.title"] : t["modal.add.title"]}
               </motion.h3>
 
               <form onSubmit={handleSaveBook} className="space-y-10 relative">
@@ -554,14 +658,14 @@ export default function App() {
                   transition={{ delay: 0.2 }}
                   className="space-y-3"
                 >
-                  <label className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-30 ml-2">Gelar / Nama Karya</label>
+                  <label className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-30 ml-2">{t["modal.book.title"]}</label>
                   <input 
                     autoFocus
                     required
                     value={newBook.title}
                     onChange={e => setNewBook({...newBook, title: e.target.value})}
                     type="text" 
-                    placeholder="Judul yang bergaung..."
+                    placeholder={t["modal.book.title.placeholder"]}
                     className="w-full bg-current/5 border border-transparent rounded-2xl px-7 py-5 focus:outline-none focus:border-current/20 focus:bg-transparent transition-all font-serif text-2xl placeholder:opacity-10 placeholder:italic"
                   />
                 </motion.div>
@@ -573,12 +677,12 @@ export default function App() {
                     transition={{ delay: 0.3 }}
                     className="space-y-3"
                   >
-                    <label className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-30 ml-2">Sang Pujangga</label>
+                    <label className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-30 ml-2">{t["modal.book.author"]}</label>
                     <input 
                       value={newBook.author}
                       onChange={e => setNewBook({...newBook, author: e.target.value})}
                       type="text" 
-                      placeholder="Penulis..."
+                      placeholder={t["modal.book.author.placeholder"]}
                       className="w-full bg-current/5 border border-transparent rounded-2xl px-6 py-4 focus:outline-none focus:border-current/20 focus:bg-transparent transition-all font-sans text-lg placeholder:opacity-10"
                     />
                   </motion.div>
@@ -589,12 +693,12 @@ export default function App() {
                     transition={{ delay: 0.4 }}
                     className="space-y-3"
                   >
-                    <label className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-30 ml-2">Aliran / Genre</label>
+                    <label className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-30 ml-2">{t["modal.book.genre"]}</label>
                     <input 
                       value={newBook.genre}
                       onChange={e => setNewBook({...newBook, genre: e.target.value})}
                       type="text"
-                      placeholder="Sastra..."
+                      placeholder={t["modal.book.genre.placeholder"]}
                       className="w-full bg-current/5 border border-transparent rounded-2xl px-6 py-4 focus:outline-none focus:border-current/20 focus:bg-transparent transition-all font-sans text-lg placeholder:opacity-10"
                     />
                   </motion.div>
@@ -606,7 +710,7 @@ export default function App() {
                   transition={{ delay: 0.45 }}
                   className="space-y-3"
                 >
-                  <label className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-30 ml-2">Sampul Buku (URL)</label>
+                  <label className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-30 ml-2">{t["modal.book.cover"]}</label>
                   <input 
                     value={newBook.coverUrl}
                     onChange={e => setNewBook({...newBook, coverUrl: e.target.value})}
@@ -623,15 +727,15 @@ export default function App() {
                     transition={{ delay: 0.46 }}
                     className="space-y-3"
                   >
-                    <label className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-30 ml-2">Status</label>
+                    <label className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-30 ml-2">{t["modal.book.status"]}</label>
                     <select
                       value={newBook.status}
                       onChange={e => setNewBook({...newBook, status: e.target.value as any})}
                       className="w-full bg-current/5 border border-transparent rounded-2xl px-6 py-4 focus:outline-none focus:border-current/20 focus:bg-transparent transition-all font-sans text-lg outline-none appearance-none cursor-pointer"
                     >
-                      <option value="unread" className="bg-bg-sanc">Belum Dibaca</option>
-                      <option value="reading" className="bg-bg-sanc">Sedang Dibaca</option>
-                      <option value="finished" className="bg-bg-sanc">Selesai</option>
+                      <option value="unread" className="bg-bg-sanc">{t["filter.unread"]}</option>
+                      <option value="reading" className="bg-bg-sanc">{t["filter.reading"]}</option>
+                      <option value="finished" className="bg-bg-sanc">{t["filter.finished"]}</option>
                     </select>
                   </motion.div>
 
@@ -641,7 +745,7 @@ export default function App() {
                     transition={{ delay: 0.47 }}
                     className="space-y-3"
                   >
-                    <label className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-30 ml-2">Penilaian</label>
+                    <label className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-30 ml-2">{t["modal.book.rating"]}</label>
                     <div className="flex gap-2 items-center bg-current/5 rounded-2xl px-6 py-4">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <button
@@ -668,13 +772,13 @@ export default function App() {
                     onClick={() => setShowAddBook(false)}
                     className="flex-1 py-5 rounded-2xl font-bold opacity-30 hover:opacity-100 transition-opacity uppercase text-[10px] tracking-widest"
                   >
-                    Batalkan
+                    {t["modal.button.cancel"]}
                   </button>
                   <button 
                     type="submit" 
                     className="flex-[2] py-5 bg-accent-sanc text-bg-sanc rounded-2xl font-bold hover:shadow-2xl hover:-translate-y-1 active:scale-95 transition-all text-sm tracking-wide"
                   >
-                    {editingBook ? 'Sempurnakan' : 'Simpan ke Rak'}
+                    {editingBook ? t["modal.button.update"] : t["modal.button.save"]}
                   </button>
                 </motion.div>
               </form>
@@ -684,7 +788,7 @@ export default function App() {
       </AnimatePresence>
 
       <footer className="py-16 text-center opacity-20 text-[10px] tracking-[0.6em] uppercase font-light">
-        — Terkurasi dalam Keheningan —
+        {t["footer"]}
       </footer>
       </motion.div>
     </AnimatePresence>
