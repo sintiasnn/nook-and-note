@@ -211,6 +211,17 @@ export default function App() {
 
   useEffect(() => {
     document.body.className = `theme-${theme}`;
+
+    const colors: Record<Theme, string> = {
+      light: '#292524',
+      dark: '#e2e8f0',
+      sepia: '#433422'
+    };
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${colors[theme]}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>`;
+    let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+    if (link) {
+      link.href = `data:image/svg+xml,${encodeURIComponent(svg)}`;
+    }
   }, [theme]);
 
   useEffect(() => {
