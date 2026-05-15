@@ -16,6 +16,7 @@ Build a lightweight, serene web application to track books and save reflective n
 - [Project Structure](#project-structure)
 - [Key Features](#key-features)
 - [Tech Stack](#tech-stack)
+- [Changelog](#changelog)
 - [Getting Started](#getting-started)
 - [License](#license)
 - [Author](#author)
@@ -81,6 +82,11 @@ Refine and update book information through a serene and intuitive interface.
 - **Typography**: 
   - **Lora**: Classic Serif for a literary feel.
   - **Montserrat**: Clean Sans-Serif for functional UI nodes.
+
+---
+
+## Changelog
+See the [CHANGELOG.md](CHANGELOG.md) file for details about new features, changes, and bug fixes across different versions of Nook & Note.
 
 ---
 
