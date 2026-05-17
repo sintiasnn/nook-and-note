@@ -236,16 +236,6 @@ export default function App() {
       const booksData: IBook[] = [];
       for (const docSnap of snapshot.docs) {
         const bookData = { id: docSnap.id, ...docSnap.data() } as IBook;
-        
-        // Fetch reflections for this book
-        const refQ = query(collection(db, `books/${docSnap.id}/reflections`), orderBy('timestamp', 'asc'));
-        const refSnapshot = await getDocs(refQ);
-        const reflections = refSnapshot.docs.map(refDoc => ({
-          id: refDoc.id,
-          ...refDoc.data()
-        })) as IReflection[];
-        
-        bookData.reflections = reflections;
         booksData.push(bookData);
       }
       
@@ -253,10 +243,12 @@ export default function App() {
       booksData.sort((a, b) => b.addedAt - a.addedAt);
       setBooks(booksData);
       
-      // Update journalBook if it's currently open
+      // Update journalBook if it's currently open (update its core details)
       if (journalBook) {
         const updatedJournal = booksData.find(b => b.id === journalBook.id);
-        if (updatedJournal) setJournalBook(updatedJournal);
+        if (updatedJournal) {
+          setJournalBook(prev => prev ? { ...updatedJournal, reflections: prev.reflections } : updatedJournal);
+        }
       }
     }, (error) => {
       console.error('Firestore Error: ', error);
@@ -264,6 +256,21 @@ export default function App() {
 
     return () => unsubscribe();
   }, [user]); // We keep this simple for now, though journalBook changes shouldn't re-trigger snapshot listening.
+
+  useEffect(() => {
+    if (!journalBook || !journalBook.id) return;
+    
+    const unsubsReflections = onSnapshot(
+      query(collection(db, `books/${journalBook.id}/reflections`), orderBy('timestamp', 'asc')),
+      (snapshot) => {
+        const refs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as IReflection[];
+        setJournalBook(prev => prev ? { ...prev, reflections: refs } : prev);
+      },
+      (error) => console.error('Firestore Error (Reflections): ', error)
+    );
+    
+    return () => unsubsReflections();
+  }, [journalBook?.id]);
 
   const handleSaveBook = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -343,13 +350,6 @@ export default function App() {
         return { ...prev, reflections: [...(prev.reflections || []), newRef] };
       });
       
-      setBooks(prev => prev.map(b => {
-        if (b.id === journalBook.id) {
-          return { ...b, reflections: [...(b.reflections || []), newRef] };
-        }
-        return b;
-      }));
-      
       setNewReflection('');
     } catch (err: any) {
       console.error('Failed to add reflection', err);
@@ -383,13 +383,6 @@ export default function App() {
             if (!prev) return prev;
             return { ...prev, reflections: (prev.reflections || []).filter(r => r.id !== refId) };
           });
-          
-          setBooks(prev => prev.map(b => {
-            if (b.id === journalBook.id) {
-              return { ...b, reflections: (b.reflections || []).filter(r => r.id !== refId) };
-            }
-            return b;
-          }));
           
         } catch (err: any) {
           console.error('Failed to delete reflection', err);
